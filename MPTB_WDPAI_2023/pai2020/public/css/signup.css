@@ -1,0 +1,76 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #000000;
+  color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.login-container {
+  max-width: 300px;
+  width: 50vw;
+  text-align: center;
+  padding: 20px;
+  border-radius: 10px;
+  background-color: #000000;
+}
+
+.logo img {
+  max-width: 300px;
+  width: 50vw;
+  margin-bottom: 0px;
+}
+
+h1 {
+  margin-bottom: 0px;
+}
+p {
+  margin-top: 5px;
+  margin-bottom: 50px;
+}
+form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column; /* This makes sure the form elements stack vertically */
+  margin-top: 20px;
+}
+
+input {
+  max-width: 300px;
+  width: 50vw;
+  padding: 10px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 25px;
+  background-color: #181818;
+  color: #fff;
+}
+
+button {
+  width: 80%;
+  padding: 10px;
+  margin-top: 50px;
+  margin-bottom: 50px;
+
+  border: none;
+  border-radius: 25px;
+  background-color: #ff6f00;
+  color: #fff;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+button:hover {
+  background-color: #ff8f00;
+}
+a {
+  color: #ff6f00;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
