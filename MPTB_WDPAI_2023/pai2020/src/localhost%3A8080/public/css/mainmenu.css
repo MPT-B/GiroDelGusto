@@ -1,0 +1,41 @@
+body {
+  font-family: "Arial", sans-serif;
+}
+
+.menubar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  overflow: hidden;
+  position: fixed;
+  margin: auto;
+  background-color: #ff6f00;
+  border-radius: 20px;
+  width: 50vw;
+  height: 5vh;
+}
+.menubar ul {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+.menubar ul li {
+  float: left;
+}
+li a {
+  display: block;
+  color: #000000;
+  text-decoration: none;
+}
+li a:hover {
+  color: #ffffff;
+}
+.active {
+  color: #ffffff;
+}
+/* Add more CSS rules as needed */

@@ -34,7 +34,7 @@ form {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: column; /* This makes sure the form elements stack vertically */
+  flex-direction: column;
   margin-top: 20px;
 }
 
@@ -72,7 +72,6 @@ a {
   color: #ff6f00;
   text-decoration: none;
 }
-
 a:hover {
   text-decoration: underline;
 }

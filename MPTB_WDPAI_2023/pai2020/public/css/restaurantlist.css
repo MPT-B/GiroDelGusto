@@ -1,0 +1,218 @@
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.foodfilter {
+  display: flex;
+  justify-content: start;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  white-space: nowrap;
+  margin: 15px;
+}
+
+.foodfilter-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 5px;
+  padding: 10px;
+  border-radius: 35%;
+  background-color: #fff;
+  cursor: pointer;
+  overflow: hidden;
+  scroll-snap-align: start;
+  width: 60px;
+  max-width: 60px;
+  font-size: 0.8em;
+  min-width: 30px;
+}
+
+.foodfilter-item img {
+  width: 8vw;
+  max-width: 40px;
+  height: auto;
+  margin-bottom: 5px;
+}
+
+.foodfilter-item span {
+  color: #333;
+  font-size: 1em;
+}
+
+.foodfilter-item:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #fdb648;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+  transform: scaleY(0);
+  transform-origin: center;
+  opacity: 0;
+  z-index: 0;
+}
+
+.foodfilter-item:hover:after {
+  transform: scaleY(1);
+  opacity: 1;
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.foodfilter-item img {
+  z-index: 1;
+  position: relative;
+}
+
+.foodfilter-item span {
+  z-index: 1;
+  position: relative;
+}
+
+.active {
+  font-weight: bold;
+  background: #fdb648;
+  color: #fff;
+}
+
+.cardlist {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2vw;
+  overflow-x: auto;
+  margin: 0 auto;
+  padding: 20px;
+}
+.card {
+  position: relative;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+  background: #151515;
+  color: #fff;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+}
+
+.card-header {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 15px;
+  padding: 0 10px;
+  width: 100%;
+  color: #000000;
+  border-radius: 200px;
+  font-size: 0.7em;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 9vw;
+  min-width: 60px;
+  max-width: 80px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 200px;
+  background: #fff;
+  margin: 1vw 0;
+  padding: 1px;
+  font-weight: bold;
+}
+
+.rating * {
+  padding: 4px;
+}
+
+.star {
+  padding: 0 0px 5px 4px;
+  color: #fdb648;
+}
+
+.rating-count {
+  font-weight: normal;
+  color: #9796a1;
+}
+
+.favorite-icon {
+  width: 10vh;
+  max-width: 70px;
+  min-width: 50;
+  flex-shrink: 0;
+  color: #ff4141; /* Adjust color as needed */
+}
+
+.card-image {
+  width: 100%;
+  display: block;
+}
+
+.card-body {
+  padding: 15px;
+  color: #ffffff;
+}
+
+.restaurant-title {
+  font-size: 1em;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.verified-icon {
+  color: #2a9d8f;
+  margin-left: 5px;
+}
+
+.restaurant-location {
+  font-size: 0.8em;
+  margin-bottom: 10px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.tag {
+  background: #eeeeee;
+  border-radius: 10px;
+  padding: 5px 10px;
+  margin: 5px;
+  font-size: 0.6em;
+  color: #000;
+}
+
+@media only screen and (max-width: 600px) {
+  .cardlist {
+    display: grid;
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(150px, 1fr)
+    ); /* Adjust minmax values to control the number of cards in a row */
+    gap: 0.5vw; /* Reduce gap between the cards */
+    overflow-x: auto;
+    margin: 0 auto;
+    padding: 0px;
+  }
+  .card {
+    width: 100%; /* Set card width to 100% to take up full column width */
+    height: auto;
+    margin: 15px auto;
+  }
+}

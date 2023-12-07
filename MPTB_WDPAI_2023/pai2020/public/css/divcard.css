@@ -1,0 +1,122 @@
+.cardlist {
+  display: flex;
+  overflow-x: auto;
+  margin: 0 auto;
+  padding: 0;
+  white-space: nowrap;
+  scroll-snap-type: x mandatory;
+}
+.card {
+  position: relative;
+  width: 50vw;
+  min-width: 150px;
+  max-width: 200px;
+  height: auto;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+  background: #151515;
+  color: #fff;
+  margin: 0 15px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+}
+
+.card-header {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 15px;
+  padding: 0 10px;
+  width: 100%;
+  color: #000000;
+  border-radius: 200px;
+  font-size: 0.7em;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 9vw;
+  min-width: 62px;
+  max-width: 70px;
+  height: 15px;
+  flex-shrink: 0;
+  border-radius: 200px;
+  background: #fff;
+  margin: 15px 0;
+  padding: 4px;
+  font-weight: bold;
+}
+
+.rating * {
+  padding: 4px;
+}
+
+.star {
+  padding: 0 0px 5px 4px;
+  color: #fdb648;
+}
+
+.rating-count {
+  font-weight: normal;
+  color: #9796a1;
+}
+
+.favorite-icon {
+  width: 10vh;
+  max-width: 70px;
+  min-width: 50;
+  flex-shrink: 0;
+  color: #ff4141;
+}
+
+.card-image {
+  width: 100%;
+  display: block;
+}
+
+.card-body {
+  padding: 15px;
+  color: #ffffff;
+}
+
+.restaurant-title {
+  font-size: 1em;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.verified-icon {
+  color: #fdb648;
+  margin-left: 5px;
+}
+
+.restaurant-location {
+  font-size: 0.8em;
+  margin-bottom: 10px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.tag {
+  background: #eeeeee;
+  border-radius: 10px;
+  padding: 5px 10px;
+  margin: 5px;
+  font-size: 0.6em;
+  color: #000;
+}
+
+@media only screen and (max-width: 600px) {
+  .card {
+    margin: 15px;
+  }
+}

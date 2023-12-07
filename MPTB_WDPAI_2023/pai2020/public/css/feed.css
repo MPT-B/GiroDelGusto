@@ -1,0 +1,98 @@
+.feed {
+  font-size: 1em;
+  margin: 20px 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.review-container {
+  min-width: 150px;
+  width: 60%;
+  background-color: #151515;
+  color: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 10px;
+}
+.review-head {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 10px;
+}
+.left-elem {
+  display: flex;
+  flex-direction: row;
+}
+.right-elem {
+  display: flex;
+  flex-direction: row;
+  margin-left: auto;
+}
+.profile-picture {
+  border-radius: 50%;
+  margin-right: 10px;
+  width: 10vw;
+  max-width: 50px;
+}
+.review-content {
+  font-size: 0.9em;
+}
+.rating,
+.visited-place,
+.ordered-food {
+  font-weight: bold;
+}
+.time,
+.date {
+  padding: 5px;
+  font-size: 0.7em;
+  font-weight: 100;
+}
+.name {
+  font-size: 1.5em;
+  font-weight: 700;
+}
+.category-switch {
+  width: 60%;
+  margin: 20px;
+}
+
+.category-switch .active {
+  color: #fdb648;
+  text-decoration: underline;
+}
+@media (max-width: 400px) {
+  .feed {
+    margin: 10px 20px;
+  }
+  .review-container {
+    width: 80%;
+  }
+  .profile-picture {
+    border-radius: 50%;
+    margin-right: 5px;
+    width: 8vw;
+  }
+  .review-content {
+    font-size: 0.6em;
+  }
+  .rating,
+  .visited-place,
+  .ordered-food {
+    font-weight: bold;
+  }
+  .time,
+  .date {
+    padding: 5px;
+    font-size: 0.5em;
+    font-weight: 100;
+  }
+  .name {
+    font-size: 1.2em;
+    font-weight: 700;
+  }
+  .category-switch {
+    font-size: 0.8em;
+  }
+}
