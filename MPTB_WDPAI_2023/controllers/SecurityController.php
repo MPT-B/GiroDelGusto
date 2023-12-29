@@ -13,35 +13,55 @@ class SecurityController extends AppController
 
     public function signup()
     {
-        if (!$this->isPost()) {
-            return $this->render('signup');
+        try {
+            if (!$this->isPost()) {
+                return $this->render('signup');
+            }
+            $username = $_POST['username'];
+            $email = $_POST['email'];
+            $password = $_POST['password'];
+            $passwordConfirmation = $_POST['passwordConfirmation'];
+
+            if (empty($username)) {
+                throw new Exception('Username cannot be empty');
+            }
+
+            if (strlen($password) < 8) {
+                throw new Exception('Password must be at least 8 characters long');
+            }
+
+            if ($password !== $passwordConfirmation) {
+                throw new Exception('Passwords do not match');
+            }
+
+            if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+                throw new Exception('Username can only contain letters, numbers, and underscores');
+            }
+
+
+            if ($this->userRepository->userExists($email)) {
+                throw new Exception('A user with this email already exists');
+            }
+
+            $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+            $user = new User($username, $email, $hashedPassword, 'normal');
+
+            $this->addUser($user);
+
+            return $this->render('login', ['messages' => ['You\'ve been succesfully registrated!']]);
+        } catch (Exception $e) {
+            if ($e->getMessage() === 'A user with this email already exists') {
+                return $this->render('signup', ['messages' => ['A user with this email already exists']]);
+            } else if ($e->getMessage() === 'Username can only contain letters, numbers, and underscores') {
+                return $this->render('signup', ['messages' => ['Username can only contain letters, numbers, and underscores']]);
+            } else if ($e->getMessage() === 'Passwords do not match') {
+                return $this->render('signup', ['messages' => ['Passwords do not match']]);
+            } else if ($e->getMessage() === 'Password must contain at least one letter and one number') {
+                return $this->render('signup', ['messages' => ['Password must contain at least one letter and one number']]);
+            } else {
+                throw $e;
+            }
         }
-        $username = $_POST['username'];
-        $email = $_POST['email'];
-        $password = $_POST['password'];
-
-        if (empty($username)) {
-            throw new Exception('Username cannot be empty');
-        }
-
-        if (strlen($password) < 8) {
-            throw new Exception('Password must be at least 8 characters long');
-        }
-
-        if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
-            throw new Exception('Username can only contain letters, numbers, and underscores');
-        }
-
-        if (!preg_match('/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/', $password)) {
-            throw new Exception('Password must contain at least one letter and one number');
-        }
-
-        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-        $user = new User($username, $email, $hashedPassword);
-
-        $this->addUser($user);
-
-        return $this->render('login', ['messages' => ['You\'ve been succesfully registered!']]);
     }
 
     public function addUser(User $newUser)
@@ -68,7 +88,7 @@ class SecurityController extends AppController
         }
         session_start();
         $_SESSION["email"] = $email;
-        $_SESSION["userId"] = $user->getId(); // Add the user ID to the session
+        $_SESSION["userId"] = $user->getId();
         $url = "http://$_SERVER[HTTP_HOST]";
         header("Location: {$url}/mainmenu");
     }

@@ -11,18 +11,10 @@
   <link rel="stylesheet" href="../../public/css/divcard.css" />
   <?php
   session_start();
-  require __DIR__ . '/../repository/RestaurantRepository.php';
-
-  // Create an instance of UserRepository
   $userRepository = new UserRepository();
-
-  // Get the user from the database using the email stored in the session
-  $user = $userRepository->getUserByEmail($_SESSION['email']);
-
-  // Get the user ID from the user object
-  $userId = $user->getId();
-
   $restaurantRepository = new RestaurantRepository();
+  $user = $userRepository->getUserByEmail($_SESSION['email']);
+  $userId = $user->getId();
 
   // Provide a static value for the town
   $town = 'Krakow';
@@ -30,8 +22,7 @@
   $nearbyRestaurants = $restaurantRepository->getNearbyRestaurants($town);
   $bestInTown = $restaurantRepository->getBestRestaurantsInTown($town);
   $userFavorites = $restaurantRepository->getUserFavoriteRestaurants($userId);
-  // $nearbyRestaurants = $restaurantRepository->getUserFavoriteRestaurants($userId);
-  // $bestInTown = $restaurantRepository->getUserFavoriteRestaurants($userId);
+
   ?>
 </head>
 
@@ -91,7 +82,11 @@
                   <span class="star">&#9733;</span>
                   <span class="rating-count">(<?= $restaurant->getNumberOfReviews() ?>+)</span>
                 </span>
-                <img src="../../public/data/fav.svg" class="favorite-icon" />
+                <a href="toggle_favorite?restaurant_id=<?php echo $restaurantRepository->getRestaurantId($restaurant->getName()); ?>&user_id=<?php echo $userId; ?>">
+                  <img src="../../public/data/<?php $isFavorite = $restaurantRepository->isFavorite($restaurantRepository->getRestaurantId($restaurant->getName()), $userId);
+                                              $favoriteIcon = $isFavorite ? 'myfav.svg' : 'fav.svg';
+                                              echo $favoriteIcon; ?>" class="favorite-icon" />
+                </a>
               </div>
               <img src="<?= $restaurant->getImageUrl() ?>" alt="Restaurant Image" class="card-image" />
               <div class="card-body">
@@ -112,7 +107,6 @@
           <?php endforeach; ?>
         </div>
         </div>
-
       </section>
       <section id="best-in-town">
         <h2>Best in Town</h2>
@@ -125,7 +119,11 @@
                   <span class="star">&#9733;</span>
                   <span class="rating-count">(<?= $restaurant->getNumberOfReviews() ?>+)</span>
                 </span>
-                <img src="../../public/data/fav.svg" class="favorite-icon" />
+                <a href="toggle_favorite?restaurant_id=<?php echo $restaurantRepository->getRestaurantId($restaurant->getName()); ?>&user_id=<?php echo $userId; ?>">
+                  <img src="../../public/data/<?php $isFavorite = $restaurantRepository->isFavorite($restaurantRepository->getRestaurantId($restaurant->getName()), $userId);
+                                              $favoriteIcon = $isFavorite ? 'myfav.svg' : 'fav.svg';
+                                              echo $favoriteIcon; ?>" class="favorite-icon" />
+                </a>
               </div>
               <img src="<?= $restaurant->getImageUrl() ?>" alt="Restaurant Image" class="card-image" />
               <div class="card-body">
@@ -157,7 +155,11 @@
                   <span class="star">&#9733;</span>
                   <span class="rating-count">(<?= $restaurant->getNumberOfReviews() ?>+)</span>
                 </span>
-                <img src="../../public/data/fav.svg" class="favorite-icon" />
+                <a href="toggle_favorite?restaurant_id=<?php echo $restaurantRepository->getRestaurantId($restaurant->getName()); ?>&user_id=<?php echo $userId; ?>">
+                  <img src="../../public/data/<?php $isFavorite = $restaurantRepository->isFavorite($restaurantRepository->getRestaurantId($restaurant->getName()), $userId);
+                                              $favoriteIcon = $isFavorite ? 'myfav.svg' : 'fav.svg';
+                                              echo $favoriteIcon; ?>" class="favorite-icon" />
+                </a>
               </div>
               <img src="<?= $restaurant->getImageUrl() ?>" alt="Restaurant Image" class="card-image" />
               <div class="card-body">
@@ -180,10 +182,6 @@
       </section>
     </section>
   </main>
-
-  <footer>
-    <!-- Footer content -->
-  </footer>
 </body>
 
 </html>

@@ -106,7 +106,18 @@ class RestaurantRepository extends Repository
 
         return $result;
     }
+    function isFavorite($restaurantId, $userId)
+    {
+        $stmt = $this->database->connect()->prepare(
+            'SELECT user_id, restaurant_id
+            FROM public.favorite_restaurants
+            WHERE user_id = :userId AND restaurant_id = :restaurantId'
+        );
 
+        $stmt->execute([':userId' => $userId, ':restaurantId' => $restaurantId]);
+
+        return $stmt->fetch() !== false;
+    }
     public function getNearbyRestaurants($userLocation): array
     {
         $result = [];
@@ -181,5 +192,35 @@ class RestaurantRepository extends Repository
         }
 
         return $result;
+    }
+
+    public function getRestaurantId($restaurantName)
+    {
+        $stmt = $this->database->connect()->prepare(
+            'SELECT id FROM restaurants WHERE name = :name'
+        );
+
+        $stmt->execute([':name' => $restaurantName]);
+
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result ? $result['id'] : null;
+    }
+    public function addFavorite($restaurantId, $userId)
+    {
+        $stmt = $this->database->connect()->prepare(
+            'INSERT INTO favorite_restaurants (user_id, restaurant_id) VALUES (:userId, :restaurantId)'
+        );
+
+        $stmt->execute([':userId' => $userId, ':restaurantId' => $restaurantId]);
+    }
+
+    public function removeFavorite($restaurantId, $userId)
+    {
+        $stmt = $this->database->connect()->prepare(
+            'DELETE FROM favorite_restaurants WHERE user_id = :userId AND restaurant_id = :restaurantId'
+        );
+
+        $stmt->execute([':userId' => $userId, ':restaurantId' => $restaurantId]);
     }
 }

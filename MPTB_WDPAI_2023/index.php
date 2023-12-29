@@ -13,4 +13,5 @@ Routing::get('map', 'DefaultController');
 Routing::get('feed', 'DefaultController');
 Routing::get('friends', 'DefaultController');
 Routing::get('userprofile', 'DefaultController');
+Routing::get('toggle_favorite', 'DefaultController');
 Routing::run($path);

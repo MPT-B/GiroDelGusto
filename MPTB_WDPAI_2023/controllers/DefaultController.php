@@ -2,6 +2,7 @@
 
 require_once 'AppController.php';
 require_once 'SecurityController.php';
+require_once __DIR__ . '/../src/repository/RestaurantRepository.php';
 class DefaultController extends AppController
 {
     private $restaurants = [];
@@ -47,5 +48,21 @@ class DefaultController extends AppController
     public function friends()
     {
         $this->render('friends');
+    }
+    public function toggle_favorite()
+    {
+        $restaurantId = $_GET['restaurant_id'];
+        $userId = $_GET['user_id'];
+
+        $restaurantRepository = new RestaurantRepository();
+
+        if ($restaurantRepository->isFavorite($restaurantId, $userId)) {
+            $restaurantRepository->removeFavorite($restaurantId, $userId);
+        } else {
+            $restaurantRepository->addFavorite($restaurantId, $userId);
+        }
+
+        $previousPage = $_SERVER['HTTP_REFERER'];
+        header('Location: ' . $previousPage);
     }
 }

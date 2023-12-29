@@ -1,13 +1,6 @@
 main {
   margin: 25px;
 }
-#restaurant-content {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  overflow: auto;
-}
 .cardlist {
   display: flex;
   overflow-x: auto;

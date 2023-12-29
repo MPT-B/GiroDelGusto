@@ -18,7 +18,7 @@ class UserRepository extends Repository
                 $user['email'],
                 $user['password'],
             );
-            $userObj->setId($user['id']); // Set the ID for the User object
+            $userObj->setId($user['id']);
             $result[] = $userObj;
         }
 
@@ -41,7 +41,7 @@ class UserRepository extends Repository
                 $user['email'],
                 $user['password']
             );
-            $userObj->setId($user['id']); // Set the ID for the User object
+            $userObj->setId($user['id']);
             return $userObj;
         }
 
@@ -50,13 +50,30 @@ class UserRepository extends Repository
     public function addUser(User $user)
     {
         $stmt = $this->database->connect()->prepare(
-            'INSERT INTO users (username, email, password) VALUES (?, ?, ?)'
+            'INSERT INTO public.users(email, username, password, role) VALUES (?, ?, ?, ?)'
         );
 
-        $stmt->execute([
-            $user->getUsername(),
-            $user->getEmail(),
-            $user->getPassword(),
-        ]);
+        try {
+            $stmt->execute([
+                $user->getEmail(),
+                $user->getUserName(),
+                $user->getPassword(),
+                $user->getRole(),
+            ]);
+        } catch (PDOException $e) {
+            echo "Error: " . $e->getMessage();
+            echo "SQLSTATE error code: " . $e->getCode();
+            echo "Error Info: " . implode(", ", $stmt->errorInfo());
+        }
+    }
+    public function userExists($email)
+    {
+        $stmt = $this->database->connect()->prepare(
+            'SELECT * FROM public.users WHERE email = ?'
+        );
+
+        $stmt->execute([$email]);
+
+        return $stmt->fetch() !== false;
     }
 }

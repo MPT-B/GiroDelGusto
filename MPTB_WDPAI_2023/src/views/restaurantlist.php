@@ -20,12 +20,14 @@
 
 
   <?php
-  require __DIR__ . '/../repository/RestaurantRepository.php';
+  session_start();
   $restaurantRepo = new RestaurantRepository();
+  $userRepository = new UserRepository();
 
   $restaurants = $restaurantRepo->getRestaurant();
+  $user = $userRepository->getUserByEmail($_SESSION['email']);
+  $userId = $user->getId();
   ?>
-
 
 </head>
 
@@ -109,7 +111,11 @@
                 <span class="star">&#9733;</span>
                 <span class="rating-count">(<?= $restaurant->getNumberOfReviews() ?>+)</span>
               </span>
-              <img src="../../public/data/fav.svg" class="favorite-icon" />
+              <a href="toggle_favorite?restaurant_id=<?php echo $restaurantRepo->getRestaurantId($restaurant->getName()); ?>&user_id=<?php echo $userId; ?>">
+                <img src="../../public/data/<?php $isFavorite = $restaurantRepo->isFavorite($restaurantRepo->getRestaurantId($restaurant->getName()), $userId);
+                                            $favoriteIcon = $isFavorite ? 'myfav.svg' : 'fav.svg';
+                                            echo $favoriteIcon; ?>" class="favorite-icon" />
+              </a>
             </div>
             <img src="<?= $restaurant->getImageUrl() ?>" alt="Restaurant Image" class="card-image" />
             <div class="card-body">
