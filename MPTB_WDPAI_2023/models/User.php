@@ -1,6 +1,7 @@
 <?php
 class User
 {
+    private $id;
     private $username;
     private $email;
     private $password;
@@ -11,28 +12,36 @@ class User
         $this->email = $email;
         $this->password = $password;
     }
+    public function getId()
+    {
+        return $this->id;
+    }
     public function getUserName()
     {
         return $this->username;
-    }
-    public function setUserName($username)
-    {
-        return $this->username = $username;
     }
     public function getEmail()
     {
         return $this->email;
     }
-    public function setEmail($email)
-    {
-        return $this->email = $email;
-    }
     public function getPassword()
     {
         return $this->password;
     }
+    public function setUserName($username)
+    {
+        return $this->username = $username;
+    }
+    public function setEmail($email)
+    {
+        return $this->email = $email;
+    }
     public function setPassword($password)
     {
         return $this->password = $password;
+    }
+    public function setId($id)
+    {
+        return $this->id = $id;
     }
 }

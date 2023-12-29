@@ -1,3 +1,13 @@
+main {
+  margin: 25px;
+}
+#restaurant-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  overflow: auto;
+}
 .cardlist {
   display: flex;
   overflow-x: auto;
@@ -76,6 +86,7 @@
 }
 
 .card-image {
+  height: 100px;
   width: 100%;
   display: block;
 }
@@ -115,8 +126,23 @@
   color: #000;
 }
 
-@media only screen and (max-width: 600px) {
-  .card {
-    margin: 15px;
+.cardlist::-webkit-scrollbar {
+  width: 0.5px; /* For Chrome, Safari, and Opera */
+}
+
+.cardlist::-webkit-scrollbar {
+  width: 1px; /* For Chrome, Safari, and Opera */
+}
+
+.cardlist::-webkit-scrollbar-track {
+  background: transparent; /* For Chrome, Safari, and Opera */
+}
+
+.cardlist::-webkit-scrollbar-thumb {
+  background: rgba(155, 155, 155, 0.7); /* For Chrome, Safari, and Opera */
+}
+@media only screen and (max-width: 900px) {
+  #restaurant-content {
+    all: unset;
   }
 }

@@ -9,12 +9,34 @@
   <link rel="stylesheet" href="../../public/css/menubar.css" />
   <link rel="stylesheet" href="../../public/css/mainmenu.css" />
   <link rel="stylesheet" href="../../public/css/divcard.css" />
+  <?php
+  session_start();
+  require __DIR__ . '/../repository/RestaurantRepository.php';
+
+  // Create an instance of UserRepository
+  $userRepository = new UserRepository();
+
+  // Get the user from the database using the email stored in the session
+  $user = $userRepository->getUserByEmail($_SESSION['email']);
+
+  // Get the user ID from the user object
+  $userId = $user->getId();
+
+  $restaurantRepository = new RestaurantRepository();
+
+  // Provide a static value for the town
+  $town = 'Krakow';
+
+  $nearbyRestaurants = $restaurantRepository->getNearbyRestaurants($town);
+  $bestInTown = $restaurantRepository->getBestRestaurantsInTown($town);
+  $userFavorites = $restaurantRepository->getUserFavoriteRestaurants($userId);
+  // $nearbyRestaurants = $restaurantRepository->getUserFavoriteRestaurants($userId);
+  // $bestInTown = $restaurantRepository->getUserFavoriteRestaurants($userId);
+  ?>
 </head>
 
 <body>
-  <?php
-  require __DIR__ . '/../../models/RestaurantsList.php';
-  ?>
+
   <header>
     <a href="userprofile"><img id="userprofile" src="../../public/data/Ellipse 1.png" alt="userprofile" /></a>
     <img id="logo" src="../../public/data/Logo.png" alt="Logo" />
@@ -61,31 +83,13 @@
       <section id="nearby-restaurants">
         <h2>Nearby Restaurants</h2>
         <div class="cardlist">
-          <!-- here start cars -->
-          <!-- <div class="card">
-          <div class="card-header">
-            <span class="rating">4.5 <span class="star">&#9733;</span><span class="rating-count">(25+)</span></span>
-            <img src="../../public/data/fav.svg" class="favorite-icon" />
-          </div>
-          <img src="../../public/data/burger.jpg" alt="Burger" class="card-image" />
-          <div class="card-body">
-            <div class="restaurant-title">
-              McDonald's<span class="verified-icon">&#10004;</span>
-            </div>
-            <div class="restaurant-location">Kraków, Floriańska 55</div>
-            <div class="tags">
-              <span class="tag">Burger</span>
-              <span class="tag">Chicken</span>
-              <span class="tag">Fast Food</span>
-            </div>
-          </div> -->
-          <?php foreach ($yourFav as $restaurant) : ?>
+          <?php foreach ($nearbyRestaurants as $restaurant) : ?>
             <div class="card">
               <div class="card-header">
                 <span class="rating">
-                  <?= $restaurant->getSummaryOpinion() ?>
+                  <?= $restaurant->getAverageRating() ?? 0 ?>
                   <span class="star">&#9733;</span>
-                  <span class="rating-count">(<?= $restaurant->getNumberOfOpinions() ?>+)</span>
+                  <span class="rating-count">(<?= $restaurant->getNumberOfReviews() ?>+)</span>
                 </span>
                 <img src="../../public/data/fav.svg" class="favorite-icon" />
               </div>
@@ -94,10 +98,13 @@
                 <div class="restaurant-title">
                   <?= $restaurant->getName() ?><span class="verified-icon">&#10004;</span>
                 </div>
-                <div class="restaurant-location"><?= $restaurant->getAddress() ?></div>
+                <div class="restaurant-location"><?= $restaurant->getAddress() . ', ' . $restaurant->getCity() ?></div>
                 <div class="tags">
-                  <?php foreach ($restaurant->getTypesOfMeals() as $meal) : ?>
-                    <span class="tag"><?= $meal ?></span>
+                  <?php
+                  $cuisines = explode(', ', $restaurant->getCuisineTypes());
+                  foreach ($cuisines as $cuisine) :
+                  ?>
+                    <span class="tag"><?= $cuisine ?></span>
                   <?php endforeach; ?>
                 </div>
               </div>
@@ -110,32 +117,13 @@
       <section id="best-in-town">
         <h2>Best in Town</h2>
         <div class="cardlist">
-          <!-- here start cars -->
-          <!-- <div class="card">
-          <div class="card-header">
-            <span class="rating">4.5 <span class="star">&#9733;</span><span class="rating-count">(25+)</span></span>
-            <img src="../../public/data/fav.svg" class="favorite-icon" />
-          </div>
-          <img src="../../public/data/burger.jpg" alt="Burger" class="card-image" />
-          <div class="card-body">
-            <div class="restaurant-title">
-              McDonald's<span class="verified-icon">&#10004;</span>
-            </div>
-            <div class="restaurant-location">Kraków, Floriańska 55</div>
-            <div class="tags">
-              <span class="tag">Burger</span>
-              <span class="tag">Chicken</span>
-              <span class="tag">Fast Food</span>
-            </div>
-          </div>
-        </div> -->
           <?php foreach ($bestInTown as $restaurant) : ?>
             <div class="card">
               <div class="card-header">
                 <span class="rating">
-                  <?= $restaurant->getSummaryOpinion() ?>
+                  <?= $restaurant->getAverageRating() ?? 0 ?>
                   <span class="star">&#9733;</span>
-                  <span class="rating-count">(<?= $restaurant->getNumberOfOpinions() ?>+)</span>
+                  <span class="rating-count">(<?= $restaurant->getNumberOfReviews() ?>+)</span>
                 </span>
                 <img src="../../public/data/fav.svg" class="favorite-icon" />
               </div>
@@ -144,10 +132,13 @@
                 <div class="restaurant-title">
                   <?= $restaurant->getName() ?><span class="verified-icon">&#10004;</span>
                 </div>
-                <div class="restaurant-location"><?= $restaurant->getAddress() ?></div>
+                <div class="restaurant-location"><?= $restaurant->getAddress() . ', ' . $restaurant->getCity() ?></div>
                 <div class="tags">
-                  <?php foreach ($restaurant->getTypesOfMeals() as $meal) : ?>
-                    <span class="tag"><?= $meal ?></span>
+                  <?php
+                  $cuisines = explode(', ', $restaurant->getCuisineTypes());
+                  foreach ($cuisines as $cuisine) :
+                  ?>
+                    <span class="tag"><?= $cuisine ?></span>
                   <?php endforeach; ?>
                 </div>
               </div>
@@ -158,31 +149,13 @@
       <section id="favorite">
         <h2>Yours Favorite</h2>
         <div class="cardlist">
-          <!-- here start cars -->
-          <!-- <div class="card">
-          <div class="card-header">
-            <span class="rating">4.5 <span class="star">&#9733;</span><span class="rating-count">(25+)</span></span>
-            <img src="../../public/data/fav.svg" class="favorite-icon" />
-          </div>
-          <img src="../../public/data/burger.jpg" alt="Burger" class="card-image" />
-          <div class="card-body">
-            <div class="restaurant-title">
-              McDonald's<span class="verified-icon">&#10004;</span>
-            </div>
-            <div class="restaurant-location">Kraków, Floriańska 55</div>
-            <div class="tags">
-              <span class="tag">Burger</span>
-              <span class="tag">Chicken</span>
-              <span class="tag">Fast Food</span>
-            </div>
-          </div> -->
-          <?php foreach ($yourFav as $restaurant) : ?>
+          <?php foreach ($userFavorites as $restaurant) : ?>
             <div class="card">
               <div class="card-header">
                 <span class="rating">
-                  <?= $restaurant->getSummaryOpinion() ?>
+                  <?= $restaurant->getAverageRating() ?? 0 ?>
                   <span class="star">&#9733;</span>
-                  <span class="rating-count">(<?= $restaurant->getNumberOfOpinions() ?>+)</span>
+                  <span class="rating-count">(<?= $restaurant->getNumberOfReviews() ?>+)</span>
                 </span>
                 <img src="../../public/data/fav.svg" class="favorite-icon" />
               </div>
@@ -191,10 +164,13 @@
                 <div class="restaurant-title">
                   <?= $restaurant->getName() ?><span class="verified-icon">&#10004;</span>
                 </div>
-                <div class="restaurant-location"><?= $restaurant->getAddress() ?></div>
+                <div class="restaurant-location"><?= $restaurant->getAddress() . ', ' . $restaurant->getCity() ?></div>
                 <div class="tags">
-                  <?php foreach ($restaurant->getTypesOfMeals() as $meal) : ?>
-                    <span class="tag"><?= $meal ?></span>
+                  <?php
+                  $cuisines = explode(', ', $restaurant->getCuisineTypes());
+                  foreach ($cuisines as $cuisine) :
+                  ?>
+                    <span class="tag"><?= $cuisine ?></span>
                   <?php endforeach; ?>
                 </div>
               </div>
