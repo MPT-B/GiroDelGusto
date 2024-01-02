@@ -1,5 +1,5 @@
 <?php
-class Restaurant
+class Restaurant implements JsonSerializable
 {
     private $name;
     private $address;
@@ -50,7 +50,6 @@ class Restaurant
         return $this->imageUrl;
     }
 
-    // Setters
     public function setName($name)
     {
         $this->name = $name;
@@ -83,5 +82,17 @@ class Restaurant
     public function getCity()
     {
         return $this->city;
+    }
+    public function jsonSerialize(): mixed
+    {
+        return [
+            'name' => $this->name,
+            'address' => $this->address,
+            'average_rating' => $this->averageRating,
+            'number_of_reviews' => $this->numberOfReviews,
+            'cuisine' => $this->cuisineTypes,
+            'image_path' => $this->imageUrl,
+            'city' => $this->city,
+        ];
     }
 }

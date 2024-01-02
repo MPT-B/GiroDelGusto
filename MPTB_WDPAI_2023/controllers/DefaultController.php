@@ -5,13 +5,10 @@ require_once 'SecurityController.php';
 require_once __DIR__ . '/../src/repository/RestaurantRepository.php';
 class DefaultController extends AppController
 {
-    private $restaurants = [];
+
     public function signup()
     {
         $this->render('signup');
-        // if($this->isGet()){
-        //     $this->render('signup');
-        // }
     }
     public function login()
     {
@@ -19,34 +16,42 @@ class DefaultController extends AppController
     }
     public function mainmenu()
     {
-        $this->render('mainmenu', ['restaurants' => $this->restaurants]);
+        $this->checkSession();
+        $this->render('mainmenu');
     }
     public function index()
     {
+        $this->checkSession();
         $this->render('login');
     }
     public function restaurantlist()
     {
+        $this->checkSession();
         $this->render('restaurantlist');
     }
     public function register()
     {
+        $this->checkSession();
         $this->render('register');
     }
     public function userprofile()
     {
+        $this->checkSession();
         $this->render('userprofile');
     }
     public function feed()
     {
+        $this->checkSession();
         $this->render('feed');
     }
     public function map()
     {
+        $this->checkSession();
         $this->render('map');
     }
     public function friends()
     {
+        $this->checkSession();
         $this->render('friends');
     }
     public function toggle_favorite()
@@ -64,5 +69,13 @@ class DefaultController extends AppController
 
         $previousPage = $_SERVER['HTTP_REFERER'];
         header('Location: ' . $previousPage);
+    }
+    public function getRestaurantsByCuisine($cuisineType)
+    {
+        $restaurantRepo = new RestaurantRepository();
+        $restaurants = $restaurantRepo->getRestaurantsByCuisine($cuisineType);
+
+        header('Content-Type: application/json');
+        echo json_encode($restaurants);
     }
 }

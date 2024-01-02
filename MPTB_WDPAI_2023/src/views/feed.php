@@ -16,11 +16,19 @@
     <link rel="mask-icon" href="../../public/icons/favicons/safari-pinned-tab.svg" color="#5bbad5">
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
+    <?php
+    $userRepository = new UserRepository();
+    $user = $userRepository->getUserByEmail($_SESSION['email']);
+    ?>
 </head>
 
 <body>
     <header>
-        <a href="userprofile"><img id="userprofile" src="../../public/data/Ellipse 1.png" alt="userprofile" /></a>
+        <a href="userprofile">
+            <?php
+            echo '<img src="' . htmlspecialchars($user->getPicturePath()) . '" alt="Profile Picture" id="userprofile">';
+            ?>
+        </a>
         <img id="logo" src="../../public/data/Logo.png" alt="Logo" />
     </header>
     <div class="menubar">

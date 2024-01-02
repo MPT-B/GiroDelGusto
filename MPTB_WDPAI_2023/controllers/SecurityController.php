@@ -89,6 +89,7 @@ class SecurityController extends AppController
         session_start();
         $_SESSION["email"] = $email;
         $_SESSION["userId"] = $user->getId();
+        $_SESSION['loggedin'] = true;
         $url = "http://$_SERVER[HTTP_HOST]";
         header("Location: {$url}/mainmenu");
     }
@@ -99,5 +100,13 @@ class SecurityController extends AppController
     public function getAllUsers()
     {
         return $this->userRepository->getUser();
+    }
+
+    public function logout()
+    {
+        session_start();
+        session_destroy();
+        header('Location: /login');
+        exit;
     }
 }

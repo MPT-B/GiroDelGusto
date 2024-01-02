@@ -30,7 +30,7 @@ main {
   overflow: hidden;
   scroll-snap-align: start;
   width: 60px;
-  max-width: 60px;
+  max-width: 70px;
   font-size: 0.8em;
   min-width: 30px;
 }
@@ -65,8 +65,8 @@ main {
 .foodfilter-item:hover:after {
   transform: scaleY(1);
   opacity: 1;
-  font-size: 1em;
-  font-weight: 600;
+  font-size: 0.8em;
+  font-weight: 400;
 }
 
 .foodfilter-item img {

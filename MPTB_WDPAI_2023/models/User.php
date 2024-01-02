@@ -6,13 +6,18 @@ class User
     private $email;
     private $password;
     private $role;
+    private $picturePath;
+    private $bio;
+    private $visitedPlaces;
+    private $favoriteCuisines;
 
-    public function __construct(string $username, string $email, string $password, string $role = 'normal')
+    public function __construct(string $username, string $email, string $password, string $picturePath, string $role = 'normal',)
     {
         $this->username = $username;
         $this->email = $email;
         $this->password = $password;
         $this->role = $role;
+        $this->picturePath = $picturePath;
     }
     public function getId()
     {
@@ -30,6 +35,27 @@ class User
     {
         return $this->password;
     }
+    public function getRole()
+    {
+        return $this->role;
+    }
+    public function getPicturePath()
+    {
+        return $this->picturePath;
+    }
+    public function getBio()
+    {
+        return $this->bio;
+    }
+    public function getVisitedPlaces()
+    {
+        return $this->visitedPlaces;
+    }
+    public function getFavoriteCuisines()
+    {
+        return $this->favoriteCuisines;
+    }
+
     public function setUserName($username)
     {
         return $this->username = $username;
@@ -50,8 +76,20 @@ class User
     {
         return $this->role = $role;
     }
-    public function getRole()
+    public function setPicturePath($picturePath)
     {
-        return $this->role;
+        return $this->picturePath = $picturePath;
+    }
+    public function setBio($bio)
+    {
+        return $this->bio = $bio;
+    }
+    public function setVisitedPlaces($visitedPlaces)
+    {
+        return $this->visitedPlaces = $visitedPlaces;
+    }
+    public function setFavoriteCuisines($favoriteCuisines)
+    {
+        return $this->favoriteCuisines = $favoriteCuisines;
     }
 }

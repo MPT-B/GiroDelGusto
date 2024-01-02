@@ -123,18 +123,17 @@ class RestaurantRepository extends Repository
         $result = [];
         $stmt = $this->database->connect()->prepare(
             '
-            SELECT r.id, r.name, l.address, ci.name as city, string_agg(DISTINCT c.type,\',
-            \') as cuisine,
+            SELECT r.id, r.name, l.address, ci.name as city, string_agg(DISTINCT c.type, \', \') as cuisine,
             ROUND(CAST(AVG(rev.rating) as numeric), 1) as average_rating,
             COUNT(rev.id) as number_of_reviews, r.image_path
-     FROM restaurants r
-     INNER JOIN locations l ON r.location_id = l.id
-     INNER JOIN cities ci ON l.city_id = ci.id
-     INNER JOIN restaurant_cuisines rc ON r.id = rc.restaurant_id
-     INNER JOIN cuisine_types c ON rc.cuisine_type_id = c.id
-     LEFT JOIN reviews rev ON r.id = rev.restaurant_id
-     WHERE ci.name =:city
-     GROUP BY r.id, r.name, l.address, ci.name, r.image_path;
+            FROM restaurants r
+            INNER JOIN locations l ON r.location_id = l.id
+            INNER JOIN cities ci ON l.city_id = ci.id
+            INNER JOIN restaurant_cuisines rc ON r.id = rc.restaurant_id
+            INNER JOIN cuisine_types c ON rc.cuisine_type_id = c.id
+            LEFT JOIN reviews rev ON r.id = rev.restaurant_id
+            WHERE ci.name =:city
+            GROUP BY r.id, r.name, l.address, ci.name, r.image_path;
             '
         );
 
@@ -222,5 +221,15 @@ class RestaurantRepository extends Repository
         );
 
         $stmt->execute([':userId' => $userId, ':restaurantId' => $restaurantId]);
+    }
+
+    public function getCuisineTypes(): array
+    {
+        $stmt = $this->database->connect()->prepare(
+            'SELECT * FROM cuisine_types'
+        );
+
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

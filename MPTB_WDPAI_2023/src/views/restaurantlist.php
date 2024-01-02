@@ -17,13 +17,14 @@
   <link rel="mask-icon" href="../../public/icons/favicons/safari-pinned-tab.svg" color="#5bbad5">
   <meta name="msapplication-TileColor" content="#da532c">
   <meta name="theme-color" content="#ffffff">
-
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
   <?php
-  session_start();
   $restaurantRepo = new RestaurantRepository();
   $userRepository = new UserRepository();
+  $repository = new RestaurantRepository();
 
+  $cuisineTypes = $repository->getCuisineTypes();
   $restaurants = $restaurantRepo->getRestaurant();
   $user = $userRepository->getUserByEmail($_SESSION['email']);
   $userId = $user->getId();
@@ -33,7 +34,11 @@
 
 <body>
   <header>
-    <a href="userprofile"><img id="userprofile" src="../../public/data/Ellipse 1.png" alt="userprofile" /></a>
+    <a href="userprofile">
+      <?php
+      echo '<img src="' . htmlspecialchars($user->getPicturePath()) . '" alt="Profile Picture" id="userprofile">';
+      ?>
+    </a>
     <img id="logo" src="../../public/data/Logo.png" alt="Logo" />
   </header>
   <div class="menubar">
@@ -74,66 +79,85 @@
     <input class="search__input" type="text" placeholder="Search" />
   </section>
   <main>
+
+
     <div class="foodfilter">
-      <div class="foodfilter-item active">
-        <img width="94" height="94" src="https://img.icons8.com/3d-fluency/94/hamburger.png" alt="hamburger" />
-        <span>Burger</span>
-      </div>
-      <div class="foodfilter-item">
-        <img width="94" height="94" src="https://img.icons8.com/3d-fluency/94/doughnut.png" alt="doughnut" />
-        <span>Donut</span>
-      </div>
-      <div class="foodfilter-item">
-        <img width="94" height="94" src="https://img.icons8.com/3d-fluency/94/salami-pizza.png" alt="salami-pizza" />
-        <span>Pizza</span>
-      </div>
-      <div class="foodfilter-item">
-        <img width="94" height="94" src="https://img.icons8.com/3d-fluency/94/pancake.png" alt="pancake" />
-        <span>Pancake</span>
-      </div>
-      <div class="foodfilter-item">
-        <img width="94" height="94" src="https://img.icons8.com/3d-fluency/94/noodles.png" alt="noodles" />
-        <span>Asian</span>
-      </div>
+      <?php foreach ($cuisineTypes as $cuisineType) : ?>
+        <div class="foodfilter-item">
+          <img width="94" height="94" src="<?php echo $cuisineType['icon']; ?>" alt="<?php echo $cuisineType['type']; ?>" />
+          <span><?php echo $cuisineType['type']; ?></span>
+        </div>
+      <?php endforeach; ?>
     </div>
+    <script>
+      var userId = <?php echo json_encode($userId); ?>;
+      $('.foodfilter-item').on('click', function() {
+        var cuisineType = $(this).find('span').text();
+        // console.log('Cuisine Type: ', cuisineType); // Log the cuisine type
 
+        $.ajax({
+          url: '/getRestaurantsByCuisine',
+          type: 'POST',
+          data: {
+            'cuisine_types': cuisineType
+          },
+          success: function(restaurants) {
+            console.log('Restaurants: ', restaurants); // Log the returned data
+            $('.cardlist').empty();
+            if (!restaurants || !restaurants.length) {
+              $('.cardlist').append(
+                '<div>No restaurants found for the selected cuisine type.</div>');
+              console.log('No restaurants found for the selected cuisine type.');
+              return;
+            }
+            $.each(restaurants, function(i, restaurant) {
+              if (restaurant.cuisine) {
+                var cuisines = restaurant.cuisine.split(', ');
+                var cuisineTags = '';
+                $.each(cuisines, function(i, cuisine) {
+                  cuisineTags += '<span class="tag">' + cuisine + '</span>';
+                });
 
+                $('.cardlist').append(
+                  '<div class="card">' +
+                  '<div class="card-header">' +
+                  '<span class="rating">' +
+                  restaurant.average_rating +
+                  '<span class="star">&#9733;</span>' +
+                  '<span class="rating-count">(' + restaurant.number_of_reviews + '+)</span>' +
+                  '</span>' +
+                  '<a href="toggle_favorite?restaurant_id=' + restaurant.id + '&user_id=' + userId + '">' +
+                  '<img src="../../public/data/' + (restaurant.isFavorite ? 'myfav.svg' : 'fav.svg') + '" class="favorite-icon" />' +
+                  '</a>' +
+                  '</div>' +
+                  '<img src="' + restaurant.image_path + '" alt="Restaurant Image" class="card-image" />' +
+                  '<div class="card-body">' +
+                  '<div class="restaurant-title">' +
+                  restaurant.name + '<span class="verified-icon">&#10004;</span>' +
+                  '</div>' +
+                  '<div class="restaurant-location">' + restaurant.address + ', ' + restaurant.city + '</div>' +
+                  '<div class="tags">' + cuisineTags + '</div>' +
+                  '</div>' +
+                  '</div>'
+                );
+              } else {
+                console.log('Restaurant object does not have a cuisineTypes property:', restaurant);
+              }
+            });
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            console.log('AJAX request failed: ', textStatus, errorThrown); // Log any AJAX errors
+          }
+        });
 
-
-    <div class="restaurantlist">
+        $('.foodfilter-item').removeClass('active');
+        $(this).addClass('active');
+      });
+    </script>
+    <div class="restaurantlist" id='restaurant-list'>
       <div class="cardlist">
         <!-- here start cars -->
-        <?php foreach ($restaurants as $restaurant) : ?>
-          <div class="card">
-            <div class="card-header">
-              <span class="rating">
-                <?= $restaurant->getAverageRating() ?? 0 ?>
-                <span class="star">&#9733;</span>
-                <span class="rating-count">(<?= $restaurant->getNumberOfReviews() ?>+)</span>
-              </span>
-              <a href="toggle_favorite?restaurant_id=<?php echo $restaurantRepo->getRestaurantId($restaurant->getName()); ?>&user_id=<?php echo $userId; ?>">
-                <img src="../../public/data/<?php $isFavorite = $restaurantRepo->isFavorite($restaurantRepo->getRestaurantId($restaurant->getName()), $userId);
-                                            $favoriteIcon = $isFavorite ? 'myfav.svg' : 'fav.svg';
-                                            echo $favoriteIcon; ?>" class="favorite-icon" />
-              </a>
-            </div>
-            <img src="<?= $restaurant->getImageUrl() ?>" alt="Restaurant Image" class="card-image" />
-            <div class="card-body">
-              <div class="restaurant-title">
-                <?= $restaurant->getName() ?><span class="verified-icon">&#10004;</span>
-              </div>
-              <div class="restaurant-location"><?= $restaurant->getAddress() . ', ' . $restaurant->getCity() ?></div>
-              <div class="tags">
-                <?php
-                $cuisines = explode(', ', $restaurant->getCuisineTypes());
-                foreach ($cuisines as $cuisine) :
-                ?>
-                  <span class="tag"><?= $cuisine ?></span>
-                <?php endforeach; ?>
-              </div>
-            </div>
-          </div>
-        <?php endforeach; ?>
+
 
 
       </div>

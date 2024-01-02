@@ -16,7 +16,6 @@ class Routing
   {
     self::$routes[$url] = $view;
   }
-
   public static function run($url)
   {
     $action = explode("/", $url)[0];
@@ -26,10 +25,16 @@ class Routing
       $errorController->handle('wrong_url');
     }
 
-    $controller = self::$routes[$action];
-    $object = new $controller;
-    $action = $action ?: 'index';
+    if ($action === 'getRestaurantsByCuisine') {
+      $controller = new DefaultController();
+      $cuisineType = $_POST['cuisine_types'];
+      $controller->getRestaurantsByCuisine($cuisineType);
+    } else {
+      $controller = self::$routes[$action];
+      $object = new $controller;
+      $action = $action ?: 'index';
 
-    $object->$action();
+      $object->$action();
+    }
   }
 }

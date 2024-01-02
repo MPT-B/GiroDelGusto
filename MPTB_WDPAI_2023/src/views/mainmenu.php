@@ -10,7 +10,6 @@
   <link rel="stylesheet" href="../../public/css/mainmenu.css" />
   <link rel="stylesheet" href="../../public/css/divcard.css" />
   <?php
-  session_start();
   $userRepository = new UserRepository();
   $restaurantRepository = new RestaurantRepository();
   $user = $userRepository->getUserByEmail($_SESSION['email']);
@@ -29,7 +28,11 @@
 <body>
 
   <header>
-    <a href="userprofile"><img id="userprofile" src="../../public/data/Ellipse 1.png" alt="userprofile" /></a>
+    <a href="userprofile">
+      <?php
+      echo '<img src="' . htmlspecialchars($user->getPicturePath()) . '" alt="Profile Picture" id="userprofile">';
+      ?>
+    </a>
     <img id="logo" src="../../public/data/Logo.png" alt="Logo" />
   </header>
   <div class="menubar">

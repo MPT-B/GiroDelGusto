@@ -16,11 +16,20 @@
     <link rel="mask-icon" href="../../public/icons/favicons/safari-pinned-tab.svg" color="#5bbad5">
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
+    <?php
+    $userRepository = new UserRepository();
+    $user = $userRepository->getUserByEmail($_SESSION['email']);
+    $friends = $userRepository->getFriendsByUserId($user->getId());
+    ?>
 </head>
 
 <body>
     <header>
-        <a href="userprofile"><img id="userprofile" src="../../public/data/Ellipse 1.png" alt="userprofile" /></a>
+        <a href="userprofile">
+            <?php
+            echo '<img src="' . htmlspecialchars($user->getPicturePath()) . '" alt="Profile Picture" id="userprofile">';
+            ?>
+        </a>
         <img id="logo" src="../../public/data/Logo.png" alt="Logo" />
     </header>
     <div class="menubar">
@@ -65,37 +74,21 @@
                 <span id='line'>|</span>
                 <span class='discover'>Discover</span>
             </div>
-            <div class="friends-list">
-                <!-- Repeat this block for each friend -->
-                <div class="friend-card">
-                    <img class="profile-picture" src="../../public/data/person.svg" alt="Szafa">
-                    <div class="info">
-                        <p class='name'>Szafa</p>
-                        <p><span class="bold">Visited:</span> 2137</p>
-                        <p><span class="bold">Likes:</span> Ramen, Burgers</p>
-                        <p>Im większa porcja tym lepiej</p>
-                    </div>
-                </div>
-                <!-- ... other friends ... -->
-                <div class="friend-card">
-                    <img class="profile-picture" src="../../public/data/person.svg" alt="Szafa">
-                    <div class="info">
-                        <p class='name'>Szafa</p>
-                        <p><span class="bold">Visited:</span> 2137</p>
-                        <p><span class="bold">Likes:</span> Ramen, Burgers</p>
-                        <p>Im większa porcja tym lepiej</p>
-                    </div>
-                </div>
-                <div class="friend-card">
-                    <img class="profile-picture" src="../../public/data/person.svg" alt="Szafa">
-                    <div class="info">
-                        <p class='name'>Szafa</p>
-                        <p><span class="bold">Visited:</span> 2137</p>
-                        <p><span class="bold">Likes:</span> Ramen, Burgers</p>
-                        <p>Im większa porcja tym lepiej</p>
-                    </div>
-                </div>
-            </div>
+            <?php
+            echo '<div class="friends-list">';
+            foreach ($friends as $friend) {
+                echo '<div class="friend-card">';
+                echo '<img class="profile-picture" src="' . htmlspecialchars($friend->getPicturePath()) . '" alt="' . htmlspecialchars($friend->getUsername()) . '">';
+                echo '<div class="info">';
+                echo '<p class="name">' . htmlspecialchars($friend->getUsername()) . '</p>';
+                echo '<p><span class="bold">Visited:</span> ' . htmlspecialchars($friend->getVisitedPlaces()) . '</p>';
+                echo '<p><span class="bold">Likes:</span> ' . htmlspecialchars($friend->getFavoriteCuisines()) . '</p>';
+                echo '<p>' . htmlspecialchars($friend->getBio()) . '</p>';
+                echo '</div>';
+                echo '</div>';
+            }
+            echo '</div>';
+            ?>
         </div>
 
     </main>

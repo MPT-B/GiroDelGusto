@@ -11,9 +11,6 @@
 
     <script src="https://kit.fontawesome.com/b9524b5160.js" crossorigin="anonymous"></script>
     <?php
-    session_start();
-
-    echo "Welcome, " . $_SESSION['email'];
     if (isset($_SESSION['email'])) {
         $userRepository = new UserRepository();
         $user = $userRepository->getUserByEmail($_SESSION['email']);
@@ -68,16 +65,11 @@
         <div class="profile-menu">
             <?php
             echo '<div class="profile-header">';
-            echo '<img src="../../public/data/person.svg" alt="Profile Picture" class="profile-picture">';
+            echo '<img src="' . htmlspecialchars($user->getPicturePath()) . '" alt="Profile Picture" class="profile-picture">';
             echo '<h1 id="Name">' . htmlspecialchars($user->getUsername()) . '</h1>';
             echo '<p id="email">' . htmlspecialchars($user->getEmail()) . '</p>';
             echo '</div>';
             ?>
-            <!-- <div class="profile-header">
-                <img src="../../public/data/person.svg" alt="Profile Picture" class="profile-picture">
-                <h1 id='Name'>Michael Scott</h1>
-                <p id='email'>michaelscott@dundermifflin.com</p>
-            </div> -->
             <div class="profile-options">
                 <a href="#" class="profile-option"><i class="fa-solid fa-user"></i>My Profile</a>
                 <a href="#" class="profile-option"><i class="fa-solid fa-location-dot"></i>My Places</a>
@@ -85,7 +77,7 @@
                 <a href="#" class="profile-option"><i class="fa-solid fa-circle-question"></i>Help & FAQ</a>
             </div>
             <div class="logout">
-                <a href="login" class="logout-button"><i class="logout fa-solid fa-right-from-bracket"></i><span>Log out</span></a>
+                <a href="logout" class="logout-button"><i class="logout fa-solid fa-right-from-bracket"></i><span>Log out</span></a>
             </div>
         </div>
     </body>

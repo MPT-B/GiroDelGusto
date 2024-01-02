@@ -6,7 +6,6 @@ main {
   overflow-x: auto;
   margin: 0 auto;
   padding: 0;
-  white-space: nowrap;
   scroll-snap-type: x mandatory;
 }
 .card {
@@ -87,12 +86,19 @@ main {
 .card-body {
   padding: 15px;
   color: #ffffff;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-all;
 }
 
 .restaurant-title {
   font-size: 1em;
   font-weight: bold;
   margin-bottom: 5px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-all;
+  white-space: normal;
 }
 
 .verified-icon {
