@@ -7,11 +7,14 @@ class ErrorController
 
     public function handle($error)
     {
+
+        error_log("Error occurred: $error");
+
         switch ($error) {
             case 'wrong_url':
                 $this->wrongUrl();
                 break;
-                // Add more cases as needed
+
             default:
                 $this->defaultError();
                 break;
@@ -20,18 +23,19 @@ class ErrorController
 
     private function wrongUrl()
     {
-        // Handle wrong url error here
-        // You can render a view or return a response
-        echo "Wrong url!";
+
+        http_response_code(404);
+        echo "Error 404: The requested URL was not found on this server.";
         exit();
     }
 
-    // Add more error handling methods as needed
+
 
     private function defaultError()
     {
-        // Handle default error here
-        echo "An error occurred!";
+
+        http_response_code(500);
+        echo "Error 500: An internal server error occurred.";
         exit();
     }
 }

@@ -1,12 +1,13 @@
 .feed {
   font-size: 1em;
-  margin: 20px 50px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  margin: 20px 0 120px;
 }
 .review-container {
+  position: relative;
   min-width: 150px;
   width: 60%;
   background-color: #151515;
@@ -38,7 +39,7 @@
 .review-content {
   font-size: 0.9em;
 }
-.rating,
+.restaurant-rating,
 .visited-place,
 .ordered-food {
   font-weight: bold;
@@ -62,6 +63,132 @@
   color: #fdb648;
   text-decoration: underline;
 }
+.restaurant-review {
+  max-width: 250px;
+  width: 40%;
+  margin: 50px auto;
+  padding: 5px;
+  background-color: #ff8c00;
+  border-radius: 15px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transition: height 0.3s ease-in-out;
+  height: 60px;
+  overflow: hidden;
+}
+.restaurant-review.expanded {
+  width: 60%;
+  max-width: 350px;
+  background-color: #151515;
+  margin: 50px auto;
+  padding: 20px;
+}
+h2 {
+  text-align: center;
+}
+
+form {
+  width: 100%;
+  max-width: 500px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+label:not(.stars-label) {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+}
+
+input,
+textarea {
+  padding: 10px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  border: 1px solid #000;
+  border-radius: 5px;
+  background-color: #000;
+  color: #fff;
+  resize: none;
+  width: 80%;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  flex-direction: row-reverse;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+.rating label {
+  margin: 0;
+  padding: 0 5px;
+}
+input[type="radio"] {
+  display: none;
+}
+
+label[for^="star"] {
+  font-size: 30px;
+  color: #4e4e4e;
+  cursor: pointer;
+}
+
+input[type="radio"]:checked ~ label[for^="star"],
+input[type="radio"]:checked ~ label[for^="star"] ~ label[for^="star"] {
+  color: #ff8c00;
+}
+
+button {
+  display: block;
+  background-color: #ff8c00;
+  color: #fff;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 50%;
+  margin: 0 auto;
+}
+
+button:hover {
+  background-color: #ffcc00;
+}
+
+.restaurant-review.expanded {
+  height: auto;
+}
+
+.collapsed-content {
+  cursor: pointer;
+  padding: 10px;
+  text-align: center;
+  transition: background-color 0.3s; /* Add a smooth transition effect */
+}
+.restaurant-review > *:not(.collapsed-content) {
+  display: none;
+}
+.restaurant-review.expanded > *:not(.collapsed-content) {
+  display: block;
+}
+.delete-icon {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  margin: 5px;
+  width: 2vw;
+  height: 2vw;
+}
+.restaurant-review.expanded .collapsed-content {
+  width: 20%;
+  display: none;
+  background-color: #151515; /* Change to the original background color */
+}
 @media (max-width: 400px) {
   .feed {
     margin: 10px 20px;
@@ -77,6 +204,7 @@
   .review-content {
     font-size: 0.6em;
   }
+
   .rating,
   .visited-place,
   .ordered-food {

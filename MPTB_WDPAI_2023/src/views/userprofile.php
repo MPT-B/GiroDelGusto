@@ -71,8 +71,8 @@
             echo '</div>';
             ?>
             <div class="profile-options">
-                <a href="#" class="profile-option"><i class="fa-solid fa-user"></i>My Profile</a>
-                <a href="#" class="profile-option"><i class="fa-solid fa-location-dot"></i>My Places</a>
+                <a href="userProfileSettings" class="profile-option"><i class="fa-solid fa-user"></i>My Profile</a>
+                <a href="userReview" class="profile-option"><i class="fa-solid fa-magnifying-glass-location"></i>My Reviews</a>
                 <a href="#" class="profile-option"><i class="fa-solid fa-gear"></i>Settings</a>
                 <a href="#" class="profile-option"><i class="fa-solid fa-circle-question"></i>Help & FAQ</a>
             </div>

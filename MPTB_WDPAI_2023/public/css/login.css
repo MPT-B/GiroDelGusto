@@ -45,7 +45,18 @@ input {
   background-color: #181818;
   color: #fff;
 }
-
+textarea {
+  max-width: 300px;
+  width: 50vw;
+  line-height: 2vh;
+  padding: 10px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 25px;
+  background-color: #181818;
+  color: #fff;
+  resize: none;
+}
 button {
   width: 80%;
 

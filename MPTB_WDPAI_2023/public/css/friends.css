@@ -1,5 +1,5 @@
 .friends {
-  font-size: 1em;
+  font-size: 0.9em;
   display: flex;
   justify-content: center;
   flex-direction: column;
@@ -7,28 +7,34 @@
 }
 .friends-list {
   min-width: 150px;
-  width: 80%;
-  color: white;
+  width: 100%;
   padding: 20px;
   margin-bottom: 10px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
 }
+
 .friend-card {
   display: flex;
   flex-direction: row;
   margin-bottom: 10px;
   background-color: #151515;
   border-radius: 25px;
+  width: 45%;
+  min-width: 180px;
+  margin: 10px;
 }
 
 .profile-picture {
   border-radius: 50%;
   margin-right: 10px;
-  width: 10vw;
-  height: 5vw;
-  max-width: 50px;
+  width: 20vw;
+  height: 20vw; /* Make this the same as the width */
+  max-width: 70px;
+  max-height: 70px; /* Add this to limit the height as well */
+  min-width: 50px;
+  min-height: 50px;
 }
 .review-content {
   font-size: 0.9em;
@@ -49,12 +55,25 @@
   color: #fdb648;
   text-decoration: underline;
 }
-@media (max-width: 400px) {
+@media (max-width: 600px) {
+  .friends {
+    font-size: 0.8em;
+  }
+  .friend-card {
+    margin-bottom: 5px;
+    background-color: #151515;
+    border-radius: 25px;
+    margin: 5px;
+  }
   .profile-picture {
     border-radius: 50%;
     margin-right: 5px;
     width: 8vw;
-    height: 4vw;
+    height: 8vw;
+    max-width: 50px;
+    max-height: 50px;
+    min-width: 35px;
+    min-height: 35px;
   }
   .review-content {
     font-size: 0.6em;

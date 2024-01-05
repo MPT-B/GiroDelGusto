@@ -1,6 +1,7 @@
 <?php
 class Restaurant implements JsonSerializable
 {
+    private $id;
     private $name;
     private $address;
     private $averageRating;
@@ -9,8 +10,9 @@ class Restaurant implements JsonSerializable
     private $imageUrl;
     public $city;
 
-    public function __construct($name, $address, $averageRating, $numberOfReviews, $cuisineTypes, $imageUrl, $city)
+    public function __construct($id, $name, $address, $averageRating, $numberOfReviews, $cuisineTypes, $imageUrl, $city)
     {
+        $this->id = $id;
         $this->name = $name;
         $this->address = $address;
         $this->averageRating = $averageRating;
@@ -19,7 +21,10 @@ class Restaurant implements JsonSerializable
         $this->imageUrl = $imageUrl;
         $this->city = $city;
     }
-
+    public function getId()
+    {
+        return $this->id;
+    }
     public function getName()
     {
         return $this->name;

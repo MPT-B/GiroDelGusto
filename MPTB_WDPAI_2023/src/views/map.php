@@ -18,7 +18,11 @@
     <meta name="theme-color" content="#ffffff">
     <?php
     $userRepository = new UserRepository();
+    $restaurantRepo = new RestaurantRepository();
+    $cuisineTypes = $restaurantRepo->getCuisineTypes();
+    $restaurants = $restaurantRepo->getAllRestaurants();
     $user = $userRepository->getUserByEmail($_SESSION['email']);
+    $userId = $user->getId();
     ?>
 </head>
 
@@ -67,26 +71,12 @@
     </div>
     <main>
         <div class="foodfilter">
-            <div class="foodfilter-item active">
-                <img width="94" height="94" src="https://img.icons8.com/3d-fluency/94/hamburger.png" alt="hamburger" />
-                <span>Burger</span>
-            </div>
-            <div class="foodfilter-item">
-                <img width="94" height="94" src="https://img.icons8.com/3d-fluency/94/doughnut.png" alt="doughnut" />
-                <span>Donut</span>
-            </div>
-            <div class="foodfilter-item">
-                <img width="94" height="94" src="https://img.icons8.com/3d-fluency/94/salami-pizza.png" alt="salami-pizza" />
-                <span>Pizza</span>
-            </div>
-            <div class="foodfilter-item">
-                <img width="94" height="94" src="https://img.icons8.com/3d-fluency/94/pancake.png" alt="pancake" />
-                <span>Pancake</span>
-            </div>
-            <div class="foodfilter-item">
-                <img width="94" height="94" src="https://img.icons8.com/3d-fluency/94/noodles.png" alt="noodles" />
-                <span>Asian</span>
-            </div>
+            <?php foreach ($cuisineTypes as $cuisineType) : ?>
+                <div class="foodfilter-item">
+                    <img width="94" height="94" src="<?php echo $cuisineType['icon']; ?>" alt="<?php echo $cuisineType['type']; ?>" />
+                    <span><?php echo $cuisineType['type']; ?></span>
+                </div>
+            <?php endforeach; ?>
         </div>
         <!-- I need to add API for maps -->
         <div id="map-container"><img id='map' src="../../public/data/MAPS_MOCKUP.png" alt="MAPS_MOCKUP"></div>

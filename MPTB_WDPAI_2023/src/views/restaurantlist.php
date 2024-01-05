@@ -22,10 +22,9 @@
   <?php
   $restaurantRepo = new RestaurantRepository();
   $userRepository = new UserRepository();
-  $repository = new RestaurantRepository();
 
-  $cuisineTypes = $repository->getCuisineTypes();
-  $restaurants = $restaurantRepo->getRestaurant();
+  $cuisineTypes = $restaurantRepo->getCuisineTypes();
+  $restaurants = $restaurantRepo->getAllRestaurants();
   $user = $userRepository->getUserByEmail($_SESSION['email']);
   $userId = $user->getId();
   ?>
@@ -76,7 +75,12 @@
     </ul>
   </div>
   <section id="search-area">
-    <input class="search__input" type="text" placeholder="Search" />
+    <input class="search__input" list="restaurant-names" name="restaurant-name" placeholder="Search" />
+    <datalist id="restaurant-names">
+      <?php foreach ($restaurants as $restaurant) : ?>
+        <option value="<?= $restaurant->getName() ?>">
+        <?php endforeach; ?>
+    </datalist>
   </section>
   <main>
 
@@ -90,11 +94,10 @@
       <?php endforeach; ?>
     </div>
     <script>
+      //  TODO move to separate js files
       var userId = <?php echo json_encode($userId); ?>;
       $('.foodfilter-item').on('click', function() {
         var cuisineType = $(this).find('span').text();
-        // console.log('Cuisine Type: ', cuisineType); // Log the cuisine type
-
         $.ajax({
           url: '/getRestaurantsByCuisine',
           type: 'POST',
@@ -102,11 +105,11 @@
             'cuisine_types': cuisineType
           },
           success: function(restaurants) {
-            console.log('Restaurants: ', restaurants); // Log the returned data
+            console.log('Restaurants: ', restaurants);
             $('.cardlist').empty();
             if (!restaurants || !restaurants.length) {
               $('.cardlist').append(
-                '<div>No restaurants found for the selected cuisine type.</div>');
+                '<div class="no-restaurant-found">No restaurants found for the selected cuisine type.</div>');
               console.log('No restaurants found for the selected cuisine type.');
               return;
             }
@@ -126,7 +129,7 @@
                   '<span class="star">&#9733;</span>' +
                   '<span class="rating-count">(' + restaurant.number_of_reviews + '+)</span>' +
                   '</span>' +
-                  '<a href="toggle_favorite?restaurant_id=' + restaurant.id + '&user_id=' + userId + '">' +
+                  '<a href="toggleFavorite?restaurant_id=' + restaurant.id + '&user_id=' + userId + '">' +
                   '<img src="../../public/data/' + (restaurant.isFavorite ? 'myfav.svg' : 'fav.svg') + '" class="favorite-icon" />' +
                   '</a>' +
                   '</div>' +
@@ -146,7 +149,7 @@
             });
           },
           error: function(jqXHR, textStatus, errorThrown) {
-            console.log('AJAX request failed: ', textStatus, errorThrown); // Log any AJAX errors
+            console.log('AJAX request failed: ', textStatus, errorThrown);
           }
         });
 
@@ -156,16 +159,13 @@
     </script>
     <div class="restaurantlist" id='restaurant-list'>
       <div class="cardlist">
-        <!-- here start cars -->
-
-
-
+        <!-- here start cards -->
       </div>
     </div>
   </main>
 
   <footer>
-    <!-- Footer content -->
+
   </footer>
 </body>
 

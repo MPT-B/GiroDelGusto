@@ -12,12 +12,12 @@
   <?php
   $userRepository = new UserRepository();
   $restaurantRepository = new RestaurantRepository();
+
   $user = $userRepository->getUserByEmail($_SESSION['email']);
   $userId = $user->getId();
 
-  // Provide a static value for the town
   $town = 'Krakow';
-
+  $restaurants = $restaurantRepository->getAllRestaurants();
   $nearbyRestaurants = $restaurantRepository->getNearbyRestaurants($town);
   $bestInTown = $restaurantRepository->getBestRestaurantsInTown($town);
   $userFavorites = $restaurantRepository->getUserFavoriteRestaurants($userId);
@@ -71,79 +71,63 @@
   </div>
   <main>
     <section id="search-area">
-      <input class="search__input" type="text" placeholder="Search" />
+      <input class="search__input" list="restaurant-names" name="restaurant-name" placeholder="Search" />
+      <datalist id="restaurant-names">
+        <?php foreach ($restaurants as $restaurant) : ?>
+          <option value="<?= $restaurant->getName() ?>">
+          <?php endforeach; ?>
+      </datalist>
     </section>
+    <section id="search-results"></section>
+    <?php
+    function generateRestaurantCard($restaurant, $userId, $restaurantRepository)
+    {
+      $isFavorite = $restaurantRepository->isFavorite($restaurant->getId(), $userId);
+      $favoriteIcon = $isFavorite ? 'myfav.svg' : 'fav.svg';
+      $cuisines = explode(', ', $restaurant->getCuisineTypes());
+    ?>
+      <div class="card">
+        <div class="card-header">
+          <span class="rating">
+            <?= $restaurant->getAverageRating() ?? 0 ?>
+            <span class="star">&#9733;</span>
+            <span class="rating-count">(<?= $restaurant->getNumberOfReviews() ?>+)</span>
+          </span>
+          <a href="toggleFavorite?restaurant_id=<?php echo $restaurant->getId(); ?>&user_id=<?php echo $userId; ?>">
+            <img src="../../public/data/<?= $favoriteIcon ?>" class="favorite-icon" />
+          </a>
+        </div>
+        <img src="<?= $restaurant->getImageUrl() ?>" alt="Restaurant Image" class="card-image" />
+        <div class="card-body">
+          <div class="restaurant-title">
+            <?= $restaurant->getName() ?><span class="verified-icon">&#10004;</span>
+          </div>
+          <div class="restaurant-location"><?= $restaurant->getAddress() . ', ' . $restaurant->getCity() ?></div>
+          <div class="tags">
+            <?php foreach ($cuisines as $cuisine) : ?>
+              <span class="tag"><?= $cuisine ?></span>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      </div>
+    <?php
+    }
+    ?>
+
     <section id="restaurant-content">
       <section id="nearby-restaurants">
         <h2>Nearby Restaurants</h2>
         <div class="cardlist">
           <?php foreach ($nearbyRestaurants as $restaurant) : ?>
-            <div class="card">
-              <div class="card-header">
-                <span class="rating">
-                  <?= $restaurant->getAverageRating() ?? 0 ?>
-                  <span class="star">&#9733;</span>
-                  <span class="rating-count">(<?= $restaurant->getNumberOfReviews() ?>+)</span>
-                </span>
-                <a href="toggle_favorite?restaurant_id=<?php echo $restaurantRepository->getRestaurantId($restaurant->getName()); ?>&user_id=<?php echo $userId; ?>">
-                  <img src="../../public/data/<?php $isFavorite = $restaurantRepository->isFavorite($restaurantRepository->getRestaurantId($restaurant->getName()), $userId);
-                                              $favoriteIcon = $isFavorite ? 'myfav.svg' : 'fav.svg';
-                                              echo $favoriteIcon; ?>" class="favorite-icon" />
-                </a>
-              </div>
-              <img src="<?= $restaurant->getImageUrl() ?>" alt="Restaurant Image" class="card-image" />
-              <div class="card-body">
-                <div class="restaurant-title">
-                  <?= $restaurant->getName() ?><span class="verified-icon">&#10004;</span>
-                </div>
-                <div class="restaurant-location"><?= $restaurant->getAddress() . ', ' . $restaurant->getCity() ?></div>
-                <div class="tags">
-                  <?php
-                  $cuisines = explode(', ', $restaurant->getCuisineTypes());
-                  foreach ($cuisines as $cuisine) :
-                  ?>
-                    <span class="tag"><?= $cuisine ?></span>
-                  <?php endforeach; ?>
-                </div>
-              </div>
-            </div>
+            <?php generateRestaurantCard($restaurant, $userId, $restaurantRepository); ?>
           <?php endforeach; ?>
-        </div>
         </div>
       </section>
       <section id="best-in-town">
         <h2>Best in Town</h2>
         <div class="cardlist">
           <?php foreach ($bestInTown as $restaurant) : ?>
-            <div class="card">
-              <div class="card-header">
-                <span class="rating">
-                  <?= $restaurant->getAverageRating() ?? 0 ?>
-                  <span class="star">&#9733;</span>
-                  <span class="rating-count">(<?= $restaurant->getNumberOfReviews() ?>+)</span>
-                </span>
-                <a href="toggle_favorite?restaurant_id=<?php echo $restaurantRepository->getRestaurantId($restaurant->getName()); ?>&user_id=<?php echo $userId; ?>">
-                  <img src="../../public/data/<?php $isFavorite = $restaurantRepository->isFavorite($restaurantRepository->getRestaurantId($restaurant->getName()), $userId);
-                                              $favoriteIcon = $isFavorite ? 'myfav.svg' : 'fav.svg';
-                                              echo $favoriteIcon; ?>" class="favorite-icon" />
-                </a>
-              </div>
-              <img src="<?= $restaurant->getImageUrl() ?>" alt="Restaurant Image" class="card-image" />
-              <div class="card-body">
-                <div class="restaurant-title">
-                  <?= $restaurant->getName() ?><span class="verified-icon">&#10004;</span>
-                </div>
-                <div class="restaurant-location"><?= $restaurant->getAddress() . ', ' . $restaurant->getCity() ?></div>
-                <div class="tags">
-                  <?php
-                  $cuisines = explode(', ', $restaurant->getCuisineTypes());
-                  foreach ($cuisines as $cuisine) :
-                  ?>
-                    <span class="tag"><?= $cuisine ?></span>
-                  <?php endforeach; ?>
-                </div>
-              </div>
-            </div>
+            <?php generateRestaurantCard($restaurant, $userId, $restaurantRepository); ?>
           <?php endforeach; ?>
         </div>
       </section>
@@ -151,40 +135,14 @@
         <h2>Yours Favorite</h2>
         <div class="cardlist">
           <?php foreach ($userFavorites as $restaurant) : ?>
-            <div class="card">
-              <div class="card-header">
-                <span class="rating">
-                  <?= $restaurant->getAverageRating() ?? 0 ?>
-                  <span class="star">&#9733;</span>
-                  <span class="rating-count">(<?= $restaurant->getNumberOfReviews() ?>+)</span>
-                </span>
-                <a href="toggle_favorite?restaurant_id=<?php echo $restaurantRepository->getRestaurantId($restaurant->getName()); ?>&user_id=<?php echo $userId; ?>">
-                  <img src="../../public/data/<?php $isFavorite = $restaurantRepository->isFavorite($restaurantRepository->getRestaurantId($restaurant->getName()), $userId);
-                                              $favoriteIcon = $isFavorite ? 'myfav.svg' : 'fav.svg';
-                                              echo $favoriteIcon; ?>" class="favorite-icon" />
-                </a>
-              </div>
-              <img src="<?= $restaurant->getImageUrl() ?>" alt="Restaurant Image" class="card-image" />
-              <div class="card-body">
-                <div class="restaurant-title">
-                  <?= $restaurant->getName() ?><span class="verified-icon">&#10004;</span>
-                </div>
-                <div class="restaurant-location"><?= $restaurant->getAddress() . ', ' . $restaurant->getCity() ?></div>
-                <div class="tags">
-                  <?php
-                  $cuisines = explode(', ', $restaurant->getCuisineTypes());
-                  foreach ($cuisines as $cuisine) :
-                  ?>
-                    <span class="tag"><?= $cuisine ?></span>
-                  <?php endforeach; ?>
-                </div>
-              </div>
-            </div>
+            <?php generateRestaurantCard($restaurant, $userId, $restaurantRepository); ?>
           <?php endforeach; ?>
         </div>
       </section>
     </section>
   </main>
 </body>
+<script>
+</script>
 
 </html>

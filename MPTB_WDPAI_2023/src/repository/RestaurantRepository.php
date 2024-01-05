@@ -4,210 +4,100 @@ require_once __DIR__ . '/../../models/Restaurant.php';
 
 class RestaurantRepository extends Repository
 {
-    public function getRestaurant(): array
+    public function __construct()
     {
-        $result = [];
-        $stmt = $this->database->connect()->prepare(
-            '
-            SELECT r.id, r.name, l.address, ci.name as city, string_agg(DISTINCT c.type, \', \') as cuisine, ROUND(CAST(AVG(rev.rating) as numeric), 1) as average_rating, COUNT(rev.id) as number_of_reviews, r.image_path
-            FROM restaurants r
-            INNER JOIN locations l ON r.location_id = l.id
-            INNER JOIN cities ci ON l.city_id = ci.id
-            INNER JOIN restaurant_cuisines rc ON r.id = rc.restaurant_id
-            INNER JOIN cuisine_types c ON rc.cuisine_type_id = c.id
-            LEFT JOIN reviews rev ON r.id = rev.restaurant_id
-            GROUP BY r.id, r.name, l.address, ci.name, r.image_path;
-            '
-        );
+        $query = new Query();
+        parent::__construct($query);
+    }
+    // public function getRestaurant(): array
+    // {
+    //     $restaurantsData = $this->fetchRestaurantsData();
+    //     return $this->createRestaurants($restaurantsData);
+    // }
+    public function getProperRestaurantList(): array
+    {
+        $query = $this->query->getRestaurantsQuery();
+        $restaurantsData = $this->fetchRestaurantsData($query);
+        return $this->createRestaurants($restaurantsData);
+    }
+    private function createRestaurants(array $restaurantsData): array
+    {
+        $restaurants = [];
 
-        $stmt->execute();
-        $restaurants = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        foreach ($restaurants as $restaurant) {
-            $result[] = new Restaurant(
-                $restaurant['name'],
-                $restaurant['address'],
-                $restaurant['average_rating'],
-                $restaurant['number_of_reviews'],
-                $restaurant['cuisine'],
-                $restaurant['image_path'],
-                $restaurant['city']
+        foreach ($restaurantsData as $restaurantData) {
+            $restaurants[] = new Restaurant(
+                $restaurantData['id'],
+                $restaurantData['name'],
+                $restaurantData['address'],
+                $restaurantData['average_rating'],
+                $restaurantData['number_of_reviews'],
+                $restaurantData['cuisine'],
+                $restaurantData['image_path'],
+                $restaurantData['city']
             );
         }
 
-        return $result;
+        return $restaurants;
+    }
+    public function getRestaurantIdByName(string $name): ?int
+    {
+        $stmt = $this->database->prepare($this->query->getRestaurantIdByNameQuery());
+        $stmt->bindParam(':name', $name, PDO::PARAM_STR);
+        $stmt->execute();
+
+        $restaurant = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $restaurant ? $restaurant['id'] : null;
+    }
+    private function fetchRestaurantsData($query): array
+    {
+        $stmt = $this->database->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function getAllRestaurants(): array
+    {
+        $query = $this->query->getRestaurantsQuery();
+        $restaurantsData = $this->fetchRestaurantsData($query);
+        return $this->createRestaurants($restaurantsData);
     }
     public function getRestaurantsByCuisine($cuisineType): array
     {
-        $result = [];
-        $stmt = $this->database->connect()->prepare(
-            '
-            SELECT r.id, r.name, l.address, ci.name as city, string_agg(DISTINCT c.type, \', \') as cuisine, ROUND(CAST(AVG(rev.rating) as numeric), 1) as average_rating, COUNT(rev.id) as number_of_reviews, r.image_path
-            FROM restaurants r
-            INNER JOIN locations l ON r.location_id = l.id
-            INNER JOIN cities ci ON l.city_id = ci.id
-            INNER JOIN restaurant_cuisines rc ON r.id = rc.restaurant_id
-            INNER JOIN cuisine_types c ON rc.cuisine_type_id = c.id
-            LEFT JOIN reviews rev ON r.id = rev.restaurant_id
-            WHERE c.type = :cuisineType
-            GROUP BY r.id, r.name, l.address, ci.name, r.image_path;
-        '
-        );
-
-        $stmt->execute([':cuisineType' => $cuisineType]);
-        $restaurants = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        foreach ($restaurants as $restaurant) {
-            $result[] = new Restaurant(
-                $restaurant['name'],
-                $restaurant['address'],
-                $restaurant['average_rating'],
-                $restaurant['number_of_reviews'],
-                $restaurant['cuisine'],
-                $restaurant['image_path'],
-                $restaurant['city']
-            );
-        }
-
-        return $result;
+        $query = $this->query->getRestaurantsByCuisine($cuisineType);
+        $restaurantsData = $this->fetchRestaurantsData($query);
+        return $this->createRestaurants($restaurantsData);
     }
+
     public function getUserFavoriteRestaurants($userId): array
     {
-        $result = [];
-        $stmt = $this->database->connect()->prepare(
-            '
-            SELECT r.id, r.name, l.address, ci.name as city, string_agg(DISTINCT c.type, \', \') as cuisine, ROUND(CAST(AVG(rev.rating) as numeric), 1) as average_rating, COUNT(rev.id) as number_of_reviews, r.image_path
-            FROM favorite_restaurants uf
-            INNER JOIN restaurants r ON uf.restaurant_id = r.id
-            INNER JOIN locations l ON r.location_id = l.id
-            INNER JOIN cities ci ON l.city_id = ci.id
-            INNER JOIN restaurant_cuisines rc ON r.id = rc.restaurant_id
-            INNER JOIN cuisine_types c ON rc.cuisine_type_id = c.id
-            LEFT JOIN reviews rev ON r.id = rev.restaurant_id
-            WHERE uf.user_id = :userId
-            GROUP BY r.id, r.name, l.address, ci.name, r.image_path;
-            '
-        );
-
-        $stmt->execute([':userId' => $userId]);
-        $restaurants = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        foreach ($restaurants as $restaurant) {
-            $result[] = new Restaurant(
-                $restaurant['name'],
-                $restaurant['address'],
-                $restaurant['average_rating'],
-                $restaurant['number_of_reviews'],
-                $restaurant['cuisine'],
-                $restaurant['image_path'],
-                $restaurant['city']
-            );
-        }
-
-        return $result;
+        $query = $this->query->getUserFavoriteRestaurants($userId);
+        $restaurantsData = $this->fetchRestaurantsData($query);
+        return $this->createRestaurants($restaurantsData);
     }
-    function isFavorite($restaurantId, $userId)
-    {
-        $stmt = $this->database->connect()->prepare(
-            'SELECT user_id, restaurant_id
-            FROM public.favorite_restaurants
-            WHERE user_id = :userId AND restaurant_id = :restaurantId'
-        );
 
-        $stmt->execute([':userId' => $userId, ':restaurantId' => $restaurantId]);
-
-        return $stmt->fetch() !== false;
-    }
     public function getNearbyRestaurants($userLocation): array
     {
-        $result = [];
-        $stmt = $this->database->connect()->prepare(
-            '
-            SELECT r.id, r.name, l.address, ci.name as city, string_agg(DISTINCT c.type, \', \') as cuisine,
-            ROUND(CAST(AVG(rev.rating) as numeric), 1) as average_rating,
-            COUNT(rev.id) as number_of_reviews, r.image_path
-            FROM restaurants r
-            INNER JOIN locations l ON r.location_id = l.id
-            INNER JOIN cities ci ON l.city_id = ci.id
-            INNER JOIN restaurant_cuisines rc ON r.id = rc.restaurant_id
-            INNER JOIN cuisine_types c ON rc.cuisine_type_id = c.id
-            LEFT JOIN reviews rev ON r.id = rev.restaurant_id
-            WHERE ci.name =:city
-            GROUP BY r.id, r.name, l.address, ci.name, r.image_path;
-            '
-        );
-
-        $stmt->execute([
-            ':city' => $userLocation
-        ]);
-        $restaurants = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        foreach ($restaurants as $restaurant) {
-            $result[] = new Restaurant(
-                $restaurant['name'],
-                $restaurant['address'],
-                $restaurant['average_rating'],
-                $restaurant['number_of_reviews'],
-                $restaurant['cuisine'],
-                $restaurant['image_path'],
-                $restaurant['city']
-            );
-        }
-
-        return $result;
+        $query = $this->query->getNearbyRestaurants($userLocation);
+        $restaurantsData = $this->fetchRestaurantsData($query);
+        return $this->createRestaurants($restaurantsData);
     }
 
-    public function getBestRestaurantsInTown(): array
+    public function getBestRestaurantsInTown($town): array
     {
-        $result = [];
-        $stmt = $this->database->connect()->prepare(
-            '
-            SELECT r.id, r.name, l.address, ci.name as city, string_agg(DISTINCT c.type, \', \') as cuisine, ROUND(CAST(AVG(rev.rating) as numeric), 1) as average_rating, COUNT(rev.id) as number_of_reviews, r.image_path
-            FROM restaurants r
-            INNER JOIN locations l ON r.location_id = l.id
-            INNER JOIN cities ci ON l.city_id = ci.id
-            INNER JOIN restaurant_cuisines rc ON r.id = rc.restaurant_id
-            INNER JOIN cuisine_types c ON rc.cuisine_type_id = c.id
-            LEFT JOIN reviews rev ON r.id = rev.restaurant_id
-            GROUP BY r.id, r.name, l.address, ci.name, r.image_path
-            ORDER BY average_rating DESC
-            LIMIT 10;
-            '
-        );
-
-        $stmt->execute();
-        $restaurants = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        foreach ($restaurants as $restaurant) {
-            $result[] = new Restaurant(
-                $restaurant['name'],
-                $restaurant['address'],
-                $restaurant['average_rating'],
-                $restaurant['number_of_reviews'],
-                $restaurant['cuisine'],
-                $restaurant['image_path'],
-                $restaurant['city']
-            );
-        }
-
-        return $result;
+        $query = $this->query->getBestRestaurantsInTown($town);
+        $restaurantsData = $this->fetchRestaurantsData($query);
+        return $this->createRestaurants($restaurantsData);
     }
-
-    public function getRestaurantId($restaurantName)
+    public function isFavorite($restaurantId, $userId)
     {
-        $stmt = $this->database->connect()->prepare(
-            'SELECT id FROM restaurants WHERE name = :name'
-        );
-
-        $stmt->execute([':name' => $restaurantName]);
-
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        return $result ? $result['id'] : null;
+        $query = $this->query->isFavorite($restaurantId, $userId);
+        $stmt = $this->database->prepare($query);
+        $stmt->execute([':userId' => $userId, ':restaurantId' => $restaurantId]);
+        return $stmt->fetch() !== false;
     }
     public function addFavorite($restaurantId, $userId)
     {
-        $stmt = $this->database->connect()->prepare(
+        $stmt = $this->database->prepare(
             'INSERT INTO favorite_restaurants (user_id, restaurant_id) VALUES (:userId, :restaurantId)'
         );
 
@@ -216,7 +106,7 @@ class RestaurantRepository extends Repository
 
     public function removeFavorite($restaurantId, $userId)
     {
-        $stmt = $this->database->connect()->prepare(
+        $stmt = $this->database->prepare(
             'DELETE FROM favorite_restaurants WHERE user_id = :userId AND restaurant_id = :restaurantId'
         );
 
@@ -225,7 +115,7 @@ class RestaurantRepository extends Repository
 
     public function getCuisineTypes(): array
     {
-        $stmt = $this->database->connect()->prepare(
+        $stmt = $this->database->prepare(
             'SELECT * FROM cuisine_types'
         );
 

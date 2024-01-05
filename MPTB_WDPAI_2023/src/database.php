@@ -1,20 +1,29 @@
 <?php
 
 require_once "config.php";
-// add singleton
+
 class Database
 {
     private $username;
     private $password;
     private $host;
     private $database;
+    private static $instance = null;
 
-    public function __construct()
+    private function __construct()
     {
         $this->username = USERNAME;
         $this->password = PASSWORD;
         $this->host = HOST;
         $this->database = DATABASE;
+    }
+
+    public static function getInstance()
+    {
+        if (self::$instance === null) {
+            self::$instance = new Database();
+        }
+        return self::$instance;
     }
 
     public function connect()
