@@ -15,6 +15,13 @@
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 10px;
+  animation: reviewOpacity 0.5s linear;
+  transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+.restaurant-review:hover,
+.review-container:hover {
+  box-shadow: 0 1em 2em #ff88005d;
+  transform: translateY(-0.3em) scale(1.01);
 }
 .review-head {
   display: flex;
@@ -39,6 +46,7 @@
 .review-content {
   font-size: 0.9em;
 }
+
 .restaurant-rating,
 .visited-place,
 .ordered-food {
@@ -54,14 +62,23 @@
   font-size: 1.5em;
   font-weight: 700;
 }
+.category {
+  color: #fff;
+  text-decoration: none;
+}
 .category-switch {
   width: 60%;
   margin: 20px;
+  cursor: pointer;
 }
-
 .category-switch .active {
   color: #fdb648;
+  font-weight: 600;
   text-decoration: underline;
+}
+.category:hover {
+  color: #ff8c00;
+  font-weight: 800;
 }
 .restaurant-review {
   max-width: 250px;
@@ -78,7 +95,10 @@
   transition: height 0.3s ease-in-out;
   height: 60px;
   overflow: hidden;
+  animation: reviewOpacity 0.5s linear;
+  transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
 }
+
 .restaurant-review.expanded {
   width: 60%;
   max-width: 350px;
@@ -168,8 +188,9 @@ button:hover {
   cursor: pointer;
   padding: 10px;
   text-align: center;
-  transition: background-color 0.3s; /* Add a smooth transition effect */
+  transition: background-color 0.3s;
 }
+
 .restaurant-review > *:not(.collapsed-content) {
   display: none;
 }
@@ -222,5 +243,16 @@ button:hover {
   }
   .category-switch {
     font-size: 0.8em;
+  }
+}
+
+@keyframes reviewOpacity {
+  0% {
+    opacity: 0;
+    transform: translateY(5vh);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0);
   }
 }

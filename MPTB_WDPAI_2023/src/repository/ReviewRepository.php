@@ -23,6 +23,18 @@ class ReviewRepository extends Repository
 
         return $result;
     }
+    public function getFeed(): array
+    {
+        $result = [];
+        $stmt = $this->database->prepare($this->query->getFeedQuery());
+        $stmt->execute();
+        $feed = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($feed as $item) {
+            $result[] = $item;
+        }
+
+        return $result;
+    }
     public function getUserFeed($userId): array
     {
         $result = [];

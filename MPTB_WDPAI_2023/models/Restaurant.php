@@ -91,6 +91,7 @@ class Restaurant implements JsonSerializable
     public function jsonSerialize(): mixed
     {
         return [
+            'id' => $this->id,
             'name' => $this->name,
             'address' => $this->address,
             'average_rating' => $this->averageRating,

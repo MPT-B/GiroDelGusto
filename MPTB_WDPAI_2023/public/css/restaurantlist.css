@@ -33,6 +33,7 @@ main {
   max-width: 70px;
   font-size: 0.7em;
   min-width: 30px;
+  transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
 }
 
 .foodfilter-item img {
@@ -61,7 +62,14 @@ main {
   opacity: 0;
   z-index: 0;
 }
-
+.foodfilter-item:hover {
+  box-shadow: 0 0.5em 2em #ff88004b;
+  transform: translateY(-0.5em) scale(1.05);
+}
+.foodfilter-item:active {
+  box-shadow: 0 0.5em 1em #ff88004b;
+  transform: translateY(-0.5vh);
+}
 .foodfilter-item:hover:after {
   transform: scaleY(1);
   opacity: 1;
@@ -118,7 +126,11 @@ main {
   flex-shrink: 0;
   scroll-snap-align: start;
 }
-
+.card:hover {
+  box-shadow: 0 1em 2em #ff8800a9;
+  transform: translateY(-0.5em) scale(1.05);
+  z-index: 1;
+}
 .card-header {
   position: absolute;
   left: 0;

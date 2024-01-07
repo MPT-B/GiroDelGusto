@@ -1,75 +1,100 @@
-main {
-  margin: 25px;
+* {
+  line-height: 1.5;
 }
-.cardlist {
+
+.main,
+#restaurant-content {
+  margin: 1em;
+  padding: 0;
+}
+
+.card-list {
   display: flex;
   overflow-x: auto;
   margin: 0 auto;
   padding: 0;
   scroll-snap-type: x mandatory;
-}
-.card {
-  position: relative;
-  width: 50vw;
-  min-width: 150px;
-  max-width: 200px;
-  height: auto;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  font-family: Arial, sans-serif;
-  background: #151515;
-  color: #fff;
-  margin: 0 15px;
-  flex-shrink: 0;
-  scroll-snap-align: start;
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
 }
 
-.card-header {
+.card-list__card {
+  position: relative;
+  width: 30vw;
+  min-width: 150px;
+  max-width: 250px;
+  border-radius: 0.625em;
+  margin: 0 0.6em;
+  height: auto;
+  overflow: hidden;
+  background: #151515;
+  color: #fff;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
+  animation: cards 1s ease-in-out;
+}
+
+.card-list__card:hover {
+  box-shadow: 0 1em 2em #ff8800a9;
+  transform: translateY(-0.5em) scale(1.05);
+  z-index: 1;
+}
+
+.card-list__card-header,
+.card-list__card-body {
+  padding: auto;
+  color: #ffffff;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-all;
+}
+
+.card-list__card-header {
   position: absolute;
   left: 0;
   top: 0;
   display: flex;
   justify-content: space-between;
-  margin: 0 0 15px;
-  padding: 0 10px;
+  margin: 0;
   width: 100%;
   color: #000000;
   border-radius: 200px;
   font-size: 0.7em;
 }
 
-.rating {
+.card-list__rating {
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
   width: 9vw;
   min-width: 62px;
   max-width: 70px;
-  height: 15px;
+  height: 2em;
+  border-radius: 12.5em;
+  margin: 1vw 0 0 1vw;
+  padding: 0.2em 1em;
   flex-shrink: 0;
-  border-radius: 200px;
   background: #fff;
-  margin: 15px 0;
-  padding: 4px;
   font-weight: bold;
 }
 
-.rating * {
-  padding: 4px;
-}
-
-.star {
-  padding: 0 0px 5px 4px;
+.card-list__star {
+  padding: 0 0 0.3125em 0.25em;
+  margin: auto;
   color: #fdb648;
 }
 
-.rating-count {
+.card-list__rating-count {
   font-weight: normal;
   color: #9796a1;
 }
 
-.favorite-icon {
+.card-list__favorite-icon {
+  cursor: pointer;
   width: 10vh;
   max-width: 70px;
   min-width: 50;
@@ -77,71 +102,74 @@ main {
   color: #ff4141;
 }
 
-.card-image {
-  height: 100px;
+.card-list__card-image {
+  height: 8em;
   width: 100%;
   display: block;
 }
 
-.card-body {
-  padding: 15px;
-  color: #ffffff;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  word-break: break-all;
-}
-
-.restaurant-title {
+.card-list__restaurant-title {
   font-size: 1em;
   font-weight: bold;
-  margin-bottom: 5px;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  word-break: break-all;
+  margin-bottom: 0.3125em;
   white-space: normal;
+  word-wrap: break-all;
+  overflow-wrap: break-all;
 }
 
-.verified-icon {
+.card-list__verified-icon,
+.card-list__tag {
   color: #fdb648;
-  margin-left: 5px;
+  margin-left: 0.3125em;
 }
 
-.restaurant-location {
+.card-list__restaurant-location {
   font-size: 0.8em;
-  margin-bottom: 10px;
+  margin-bottom: 0.625em;
 }
 
-.tags {
+.card-list__tags {
   display: flex;
   flex-wrap: wrap;
 }
 
-.tag {
+.card-list__tag {
   background: #eeeeee;
-  border-radius: 10px;
-  padding: 5px 10px;
-  margin: 5px;
+  border-radius: 0.625em;
+  padding: 0.3125em 0.625em;
+  margin: 0.3125em;
   font-size: 0.6em;
   color: #000;
 }
 
-.cardlist::-webkit-scrollbar {
-  width: 0.5px; /* For Chrome, Safari, and Opera */
+.card-list::-webkit-scrollbar {
+  width: 1px;
 }
 
-.cardlist::-webkit-scrollbar {
-  width: 1px; /* For Chrome, Safari, and Opera */
+.card-list::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.cardlist::-webkit-scrollbar-track {
-  background: transparent; /* For Chrome, Safari, and Opera */
+.card-list::-webkit-scrollbar-thumb {
+  background: rgba(155, 155, 155, 0.7);
 }
 
-.cardlist::-webkit-scrollbar-thumb {
-  background: rgba(155, 155, 155, 0.7); /* For Chrome, Safari, and Opera */
-}
 @media only screen and (max-width: 900px) {
-  #restaurant-content {
+  .restaurant-content {
     all: unset;
+  }
+}
+
+@keyframes cards {
+  0% {
+    opacity: 0;
+    transform: translateY(10vh);
+  }
+  80% {
+    transform: translateY(-1vh);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0);
   }
 }

@@ -1,41 +1,25 @@
 <?php
 class ErrorController
 {
-    public function __construct()
-    {
-    }
-
     public function handle($error)
     {
-
         error_log("Error occurred: $error");
 
         switch ($error) {
             case 'wrong_url':
-                $this->wrongUrl();
+                $this->sendErrorResponse(404, "The requested URL was not found on this server.");
                 break;
 
             default:
-                $this->defaultError();
+                $this->sendErrorResponse(500, "An internal server error occurred.");
                 break;
         }
     }
 
-    private function wrongUrl()
+    private function sendErrorResponse($code, $message)
     {
-
-        http_response_code(404);
-        echo "Error 404: The requested URL was not found on this server.";
-        exit();
-    }
-
-
-
-    private function defaultError()
-    {
-
-        http_response_code(500);
-        echo "Error 500: An internal server error occurred.";
+        http_response_code($code);
+        echo "Error {$code}: {$message}";
         exit();
     }
 }

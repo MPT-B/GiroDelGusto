@@ -126,60 +126,48 @@ class SecurityController extends AppController
     {
         $this->userRepository->addUser($newUser);
     }
-    // public function updateProfile()
-    // {
-    //     session_start();
-    //     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    //         $userRepository = new UserRepository();
-
-    //         $userId = $_SESSION['user_id'];
-    //         $username = $_POST['username'];
-    //         $email = $_POST['email'];
-    //         $password = $_POST['password'];
-    //         $likes = $_POST['likes'];
-    //         $bio = $_POST['bio'];
-
-    //         // Update the users table
-    //         $userRepository->updateUser($userId, $username, $email, $password);
-
-    //         // Update the profile in the users table
-    //         $userRepository->updateUserProfile($userId, $bio, $likes);
-    //     }
-    // }
     public function updateProfile()
     {
         session_start();
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $userRepository = new UserRepository();
+        try {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $userRepository = new UserRepository();
 
-            $user = $userRepository->getUserByEmail($_SESSION['email']);
-            if ($user === null) {
+                $user = $userRepository->getUserByEmail($_SESSION['email']);
+                if ($user === null) {
+                    header('Location: /mainmenu');
+                    exit;
+                }
+
+                $userId = $user->getId();
+
+                $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_SPECIAL_CHARS);
+                $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    throw new Exception('Invalid email format');
+                }
+                $password = filter_input(
+                    INPUT_POST,
+                    'password',
+                    FILTER_SANITIZE_SPECIAL_CHARS
+                );
+                $passwordConfirmation = filter_input(
+                    INPUT_POST,
+                    'passwordConfirmation',
+                    FILTER_SANITIZE_SPECIAL_CHARS
+                );
+                if ($password !== $passwordConfirmation) {
+                    throw new Exception('Password and confirmation password do not match');
+                }
+                $bio = filter_input(INPUT_POST, 'bio', FILTER_SANITIZE_SPECIAL_CHARS);
+                $userRepository->updateUser($userId, $username, $email, $password);
+                $userRepository->updateUserProfile($userId, $bio);
                 header('Location: /mainmenu');
                 exit;
             }
-
-            $userId = $user->getId();  // Get the user ID from the User object
-
-            $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_SPECIAL_CHARS);
-            $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                throw new Exception('Invalid email format');
-            }
-            $password = filter_input(
-                INPUT_POST,
-                'password',
-                FILTER_SANITIZE_SPECIAL_CHARS
-            );
-            // $likes = filter_input(INPUT_POST, 'likes', FILTER_SANITIZE_SPECIAL_CHARS);
-            $bio = filter_input(INPUT_POST, 'bio', FILTER_SANITIZE_SPECIAL_CHARS);
-
-            // Update the users table
-            $userRepository->updateUser($userId, $username, $email, $password);
-
-            // Update the profile in the users table
-            // $userRepository->updateUserProfile($userId, $bio, $likes);
-            $userRepository->updateUserProfile($userId, $bio,);
-            header('Location: /mainmenu');
+        } catch (Exception $e) {
+            $_SESSION['error'] = $e->getMessage();
+            header('Location: /userProfileSettings');
             exit;
         }
     }

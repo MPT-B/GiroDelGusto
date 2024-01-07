@@ -22,7 +22,16 @@ class UserRepository extends Repository
 
         return $userObj;
     }
-
+    private function createProfile(int $userId): void
+    {
+        try {
+            $profile = $this->getUserProfile($userId);
+        } catch (Exception $e) {
+            // If the user profile does not exist, create a new one
+            $stmt = $this->database->prepare("INSERT INTO public.profile(user_id, bio) VALUES (?, 'New to Grio')");
+            $stmt->execute([$userId]);
+        }
+    }
     public function getUser(): array
     {
         $result = [];
@@ -62,7 +71,6 @@ class UserRepository extends Repository
         if ($this->userExists($user->getEmail())) {
             throw new Exception("User with email {$user->getEmail()} already exists");
         }
-
         $stmt = $this->database->prepare($this->query->addUserQuery());
         $stmt->execute([
             $user->getEmail(),
@@ -70,6 +78,9 @@ class UserRepository extends Repository
             $user->getPassword(),
             $user->getRole(),
         ]);
+
+        $userId = $this->database->lastInsertId();
+        $this->createProfile($userId);
     }
 
     public function userExists($email)
@@ -111,8 +122,8 @@ class UserRepository extends Repository
 
             return $userObj;
         }
-        // TODO throw error
-        return null;
+
+        throw new Exception("User not found");
     }
 
     public function updateUser($userId, $username, $email, $password)

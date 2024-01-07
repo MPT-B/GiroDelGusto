@@ -66,7 +66,7 @@ class Query
     {
         return "
         SELECT r.id, r.name, l.address, ci.name as city, string_agg(DISTINCT c.type, ', ') as cuisine,
-        ROUND(CAST(AVG(rev.rating) as numeric), 1) as average_rating,
+        COALESCE(ROUND(CAST(AVG(rev.rating) as numeric), 1), 0) as average_rating,
         (SELECT COUNT(*) FROM reviews WHERE restaurant_id = r.id) as number_of_reviews,
         r.image_path
         FROM restaurants r
@@ -91,6 +91,25 @@ class Query
     public function getRestaurantIdByNameQuery(): string
     {
         return 'SELECT id FROM public.restaurants WHERE name = :name';
+    }
+    public function getRestaurantByNameQuery($name): string
+    {
+        return "
+            SELECT r.id, r.name, l.address, ci.name as city, string_agg(DISTINCT c.type, ', ') as cuisine, ROUND(CAST(AVG(rev.rating) as numeric), 1) as average_rating,(SELECT COUNT(*) FROM reviews WHERE restaurant_id = r.id) as number_of_reviews, r.image_path
+            FROM restaurants r
+            INNER JOIN locations l ON r.location_id = l.id
+            INNER JOIN cities ci ON l.city_id = ci.id
+            INNER JOIN restaurant_cuisines rc ON r.id = rc.restaurant_id
+            INNER JOIN cuisine_types c ON rc.cuisine_type_id = c.id
+            LEFT JOIN reviews rev ON r.id = rev.restaurant_id
+            WHERE r.name = '$name'
+            GROUP BY r.id, r.name, l.address, ci.name, r.image_path;
+        ";
+    }
+
+    public function getCitiesQuery()
+    {
+        return "SELECT * FROM public.cities";
     }
     // USERS
     public function getUserQuery(): string
@@ -204,6 +223,30 @@ class Query
          AND u.id <> :userId
      ORDER BY r.date_added DESC;
                      ';
+    }
+    public function getFeedQuery(): string
+    {
+        return '
+        SELECT DISTINCT
+            r.id as review_id,
+            u.username AS user_username,
+            p.picture_path AS user_image_path,
+            r.rating,
+            res.name AS restaurant_name,
+            r.comment,
+            r.food_ordered,
+            r.date_added
+        FROM
+            public.users u
+        JOIN
+            public.reviews r ON u.id = r.user_id
+        JOIN
+            public.restaurants res ON r.restaurant_id = res.id
+        JOIN
+            public.profile p ON u.id = p.user_id
+        ORDER BY r.date_added DESC
+        LIMIT 15;
+        ';
     }
     public function getUserFeedQuery(): string
     {

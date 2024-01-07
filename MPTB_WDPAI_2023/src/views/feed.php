@@ -1,107 +1,60 @@
-<!DOCTYPE html>
-<html lang="pl">
+<? include 'head.php'; ?>
+<link rel="stylesheet" href="../../public/css/feed.css" />
+<? include 'phpRepository.php'; ?>
 
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GiroDelGusto</title>
-    <link rel="stylesheet" href="../../public/css/global.css" />
-    <link rel="stylesheet" href="../../public/css/menubar.css" />
-    <link rel="stylesheet" href="../../public/css/feed.css" />
-
-    <link rel="apple-touch-icon" sizes="180x180" href="../../public/icons/favicons/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="../../public/icons/favicons/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="../../public/icons/favicons/favicon-16x16.png">
-    <link rel="manifest" href="../../public/icons/favicons/site.webmanifest">
-    <link rel="mask-icon" href="../../public/icons/favicons/safari-pinned-tab.svg" color="#5bbad5">
-    <meta name="msapplication-TileColor" content="#da532c">
-    <meta name="theme-color" content="#ffffff">
-    <?php
-    $restaurantRepository = new RestaurantRepository();
-    $userRepository = new UserRepository();
-    $reviewRepository = new ReviewRepository();
-    $restaurants = $restaurantRepository->getAllRestaurants();
-    $user = $userRepository->getUserByEmail($_SESSION['email']);
-    $userId = $user->getId();
-    $feed = $reviewRepository->getFriendsFeed($userId);
-    ?>
 </head>
 
 <body>
-    <header>
-        <a href="userprofile">
-            <?php
-            echo '<img src="' . htmlspecialchars($user->getPicturePath()) . '" alt="Profile Picture" id="userprofile">';
-            ?>
-        </a>
-        <img id="logo" src="../../public/data/Logo.png" alt="Logo" />
-    </header>
-    <div class="menubar">
-        <ul>
-            <li>
-                <a class=" menuitem" href="mainmenu">
-                    <img src="../../public/icons/menu.svg" alt="menu-icon" />
-                    <p>Menu</p>
-                </a>
-            </li>
-            <li>
-                <a class="menuitem" href="restaurantlist">
-                    <img src="../../public/icons/cluttery.svg" alt="menu-icon" />
-                    <p>Restaurant List</p>
-                </a>
-            </li>
-            <li>
-                <a class="active menuitem" href="feed">
-                    <img src="../../public/icons/feed.svg" alt="menu-icon" />
-                    <p>Feed</p>
-                </a>
-            </li>
-            <li>
-                <a class="menuitem" href="map">
-                    <img src="../../public/icons/map.svg" alt="menu-icon" />
-                    <p>Map</p>
-                </a>
-            </li>
-            <li>
-                <a class="menuitem" href="friends">
-                    <img src="../../public/icons/friends.svg" alt="menu-icon" />
-                    <p>Friends</p>
-                </a>
-            </li>
-        </ul>
-    </div>
+    <?php include 'menubar.php'; ?>
+
     <main>
         <div class="feed">
             <div class="category-switch">
-                <span class='active followed'>Followed Users</span>
+                <a href="?category=followed" class="category <?php echo (isset($_GET['category']) && $_GET['category'] === 'followed') ? 'active' : '' ?>">Followed Users</a>
                 <span id='line'>|</span>
-                <span class='discover'>Discover</span>
+                <a href="?category=discover" class="category <?php echo (isset($_GET['category']) && $_GET['category'] === 'discover') ? 'active' : '' ?>">Discover</a>
             </div>
             <?php
+            if (isset($_GET['category']) && $_GET['category'] === 'followed') {
+                $feed = $reviewRepository->getFriendsFeed($userId);
+            } else if (isset($_GET['category']) && $_GET['category'] === 'discover') {
+                $feed = $reviewRepository->getFeed();
+            } else {
+                $feed = $reviewRepository->getFriendsFeed($userId);
+            }
             foreach ($feed as $item) {
-                echo '<div class="review-container">';
-                echo '<div class="review-head">';
-                echo '<div class="left-elem">';
-                echo '<img src="' . htmlspecialchars($item['user_image_path']) . '" alt="Profile Picture" class="profile-picture">';
-                echo '<div class="name">' . htmlspecialchars($item['user_username']) . '</div>';
-                echo '</div>';
-                echo '<div class="right-elem">';
-                echo '<div class="time">' . (isset($item['date_added']) ? htmlspecialchars(date('H:i', strtotime($item['date_added']))) : '') . '</div>';
-                echo '<div class="date">' . (isset($item['date_added']) ? htmlspecialchars(date('d.m.Y', strtotime($item['date_added']))) : '') . '</div>';
+                $deleteIcon = '';
                 if ($user->getRole() === 'admin') {
-                    echo '<a href="deleteReview?review_id=' . htmlspecialchars($item['review_id']) . '&user_id=' . htmlspecialchars($userId) . '">';
-                    echo '<img src="../../public/data/delete.png" class="delete-icon" />';
-                    echo '</a>';
+                    $deleteIcon = <<<EOT
+            <a href="deleteReview?review_id={$item['review_id']}&user_id={$userId}">
+                <img src="../../public/data/delete.png" class="delete-icon" />
+            </a>
+EOT;
                 }
-                echo '</div>';
-                echo '</div>';
-                echo '<div class="review-content">';
-                echo 'Visited: <span class="visited-place">' . htmlspecialchars($item['restaurant_name']) . '</span><br>';
-                echo 'Rate: <span class="restaurant-rating">' . htmlspecialchars($item['rating']) . '</span><br>';
-                echo 'Ordered:<span class="ordered-food">' . htmlspecialchars($item['food_ordered']) . '</span><br>';
-                echo '<span class="opinion">' . htmlspecialchars($item['comment']) . '</span>';
-                echo '</div>';
-                echo '</div>';
+                $time = isset($item['date_added']) ? date('H:i', strtotime($item['date_added'])) : '';
+                $date = isset($item['date_added']) ? date('d.m.Y', strtotime($item['date_added'])) : '';
+
+                echo <<<EOT
+        <div class="review-container">
+            <div class="review-head">
+                <div class="left-elem">
+                    <img src="{$item['user_image_path']}" alt="Profile Picture" class="profile-picture">
+                    <div class="name">{$item['user_username']}</div>
+                </div>
+                <div class="right-elem">
+                    <div class="time">{$time}</div>
+                    <div class="date">{$date}</div>
+                    {$deleteIcon}
+                </div>
+            </div>
+            <div class="review-content">
+                Visited: <span class="visited-place">{$item['restaurant_name']}</span><br>
+                Rate: <span class="restaurant-rating">{$item['rating']}</span><br>
+                Ordered:<span class="ordered-food">{$item['food_ordered']}</span><br>
+                <span class="opinion">{$item['comment']}</span>
+            </div>
+        </div>
+    EOT;
             }
             ?>
         </div>
@@ -172,6 +125,11 @@
                 toggleReviewForm();
             }
         });
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        handleSearchInput(<?php echo json_encode($userId); ?>);
     });
 </script>
 

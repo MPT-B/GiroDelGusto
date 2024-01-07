@@ -16,6 +16,7 @@ class Routing
   {
     self::$routes[$url] = $view;
   }
+
   public static function run($url)
   {
     $action = explode("/", $url)[0];
@@ -25,16 +26,37 @@ class Routing
       $errorController->handle('wrong_url');
     }
 
-    if ($action === 'getRestaurantsByCuisine') {
-      $controller = new DefaultController();
-      $cuisineType = $_POST['cuisine_types'];
-      $controller->getRestaurantsByCuisine($cuisineType);
-    } else {
-      $controller = self::$routes[$action];
-      $object = new $controller;
-      $action = $action ?: 'index';
+    $defaultControllerActions = [
+      'isFavorite',
+      'getRestaurantsByCuisine',
+      'toggleFavorite',
+      'getRestaurantByName',
+      'getRestaurants'
+    ];
 
-      $object->$action();
+    if (in_array($action, $defaultControllerActions)) {
+      self::handleDefaultControllerAction($action);
+    } else {
+      $route = self::$routes[$action];
+      if ($route instanceof Closure) {
+        $route();
+      } else {
+        $object = new $route;
+        $object->$action();
+      }
+    }
+  }
+
+  private static function handleDefaultControllerAction($action)
+  {
+    $controller = new DefaultController();
+
+    if ($action === 'isFavorite') {
+      $restaurantId = $_GET['restaurant_id'];
+      $userId = $_GET['user_id'];
+      $controller->isFavorite($restaurantId, $userId);
+    } else {
+      $controller->$action();
     }
   }
 }

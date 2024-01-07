@@ -9,16 +9,22 @@ class RestaurantRepository extends Repository
         $query = new Query();
         parent::__construct($query);
     }
-    // public function getRestaurant(): array
-    // {
-    //     $restaurantsData = $this->fetchRestaurantsData();
-    //     return $this->createRestaurants($restaurantsData);
-    // }
-    public function getProperRestaurantList(): array
+
+    public function getProperRestaurantList($userId, $town): array
     {
-        $query = $this->query->getRestaurantsQuery();
-        $restaurantsData = $this->fetchRestaurantsData($query);
-        return $this->createRestaurants($restaurantsData);
+        $nearbyRestaurantsQuery = $this->query->getNearbyRestaurants($town);
+        $bestInTownQuery = $this->query->getBestRestaurantsInTown($town);
+        $userFavoritesQuery = $this->query->getUserFavoriteRestaurants($userId);
+
+        $nearbyRestaurantsData = $this->fetchRestaurantsData($nearbyRestaurantsQuery);
+        $bestInTownData = $this->fetchRestaurantsData($bestInTownQuery);
+        $userFavoritesData = $this->fetchRestaurantsData($userFavoritesQuery);
+
+        return [
+            'nearbyRestaurants' => $this->createRestaurants($nearbyRestaurantsData),
+            'bestInTown' => $this->createRestaurants($bestInTownData),
+            'userFavorites' => $this->createRestaurants($userFavoritesData),
+        ];
     }
     private function createRestaurants(array $restaurantsData): array
     {
@@ -39,6 +45,46 @@ class RestaurantRepository extends Repository
 
         return $restaurants;
     }
+    public function addNewRestaurant($name, $address, $cityId, $cuisineId, $photoPath)
+    {
+        $this->database->beginTransaction();
+
+        try {
+            // Insert the new address
+            $query = "INSERT INTO public.locations (address, city_id) VALUES (?, ?)";
+            $stmt = $this->database->prepare($query);
+            $stmt->execute([$address, $cityId]);
+
+            // Get the ID of the new address
+            $newLocationId = $this->database->lastInsertId();
+
+            // Insert the new restaurant
+            $query = "INSERT INTO public.restaurants (name, location_id, image_path) VALUES (?, ?, ?)";
+            $stmt = $this->database->prepare($query);
+            $stmt->execute([$name, $newLocationId, $photoPath]);
+
+            // Get the ID of the new restaurant
+            $newRestaurantId = $this->database->lastInsertId();
+
+            // Insert the new cuisine type for the restaurant
+            $query = "INSERT INTO public.restaurant_cuisines (restaurant_id, cuisine_type_id) VALUES (?, ?)";
+            $stmt = $this->database->prepare($query);
+            $stmt->execute([$newRestaurantId, $cuisineId]);
+
+            // Commit the transaction
+            $this->database->commit();
+        } catch (Exception $e) {
+            // An error occurred, rollback the transaction
+            $this->database->rollBack();
+            throw $e;
+        }
+    }
+    public function getRestaurantByName(string $name): array
+    {
+        $query = $this->query->getRestaurantByNameQuery($name);
+        $restaurantsData = $this->fetchRestaurantsData($query);
+        return $this->createRestaurants($restaurantsData);
+    }
     public function getRestaurantIdByName(string $name): ?int
     {
         $stmt = $this->database->prepare($this->query->getRestaurantIdByNameQuery());
@@ -49,12 +95,14 @@ class RestaurantRepository extends Repository
 
         return $restaurant ? $restaurant['id'] : null;
     }
+
     private function fetchRestaurantsData($query): array
     {
         $stmt = $this->database->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
     public function getAllRestaurants(): array
     {
         $query = $this->query->getRestaurantsQuery();
@@ -88,6 +136,13 @@ class RestaurantRepository extends Repository
         $restaurantsData = $this->fetchRestaurantsData($query);
         return $this->createRestaurants($restaurantsData);
     }
+    public function getCities(): array
+    {
+        $query = $this->query->getCitiesQuery();
+        $stmt = $this->database->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
     public function isFavorite($restaurantId, $userId)
     {
         $query = $this->query->isFavorite($restaurantId, $userId);
@@ -102,6 +157,7 @@ class RestaurantRepository extends Repository
         );
 
         $stmt->execute([':userId' => $userId, ':restaurantId' => $restaurantId]);
+        return $stmt->fetch() !== false;
     }
 
     public function removeFavorite($restaurantId, $userId)
@@ -111,6 +167,7 @@ class RestaurantRepository extends Repository
         );
 
         $stmt->execute([':userId' => $userId, ':restaurantId' => $restaurantId]);
+        return $stmt->fetch() !== false;
     }
 
     public function getCuisineTypes(): array
