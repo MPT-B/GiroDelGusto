@@ -1,0 +1,1481 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 16.1 (Debian 16.1-1.pgdg120+1)
+-- Dumped by pg_dump version 16.1
+
+-- Started on 2024-01-07 18:21:45 UTC
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+DROP DATABASE db;
+--
+-- TOC entry 3496 (class 1262 OID 16384)
+-- Name: db; Type: DATABASE; Schema: -; Owner: docker
+--
+
+CREATE DATABASE db WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE_PROVIDER = libc LOCALE = 'en_US.utf8';
+
+
+ALTER DATABASE db OWNER TO docker;
+
+\connect db
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- TOC entry 4 (class 2615 OID 2200)
+-- Name: public; Type: SCHEMA; Schema: -; Owner: pg_database_owner
+--
+
+CREATE SCHEMA public;
+
+
+ALTER SCHEMA public OWNER TO pg_database_owner;
+
+--
+-- TOC entry 3497 (class 0 OID 0)
+-- Dependencies: 4
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: pg_database_owner
+--
+
+COMMENT ON SCHEMA public IS 'standard public schema';
+
+
+--
+-- TOC entry 863 (class 1247 OID 16390)
+-- Name: user_role; Type: DOMAIN; Schema: public; Owner: docker
+--
+
+CREATE DOMAIN public.user_role AS character varying(255)
+	CONSTRAINT role_name CHECK ((((VALUE)::text = 'admin'::text) OR ((VALUE)::text = 'normal'::text) OR ((VALUE)::text = 'restaurateur'::text)));
+
+
+ALTER DOMAIN public.user_role OWNER TO docker;
+
+--
+-- TOC entry 238 (class 1255 OID 24658)
+-- Name: add_friendship(integer, integer); Type: FUNCTION; Schema: public; Owner: docker
+--
+
+CREATE FUNCTION public.add_friendship(p_member1_id integer, p_member2_id integer) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    IF p_member1_id < p_member2_id THEN
+        INSERT INTO public.friendships (member1_id, member2_id, created_at) VALUES (p_member1_id, p_member2_id, NOW());
+    ELSE
+        RAISE EXCEPTION 'Invalid friendship. Member1_id must be less than Member2_id.';
+    END IF;
+END;
+$$;
+
+
+ALTER FUNCTION public.add_friendship(p_member1_id integer, p_member2_id integer) OWNER TO docker;
+
+--
+-- TOC entry 237 (class 1255 OID 24636)
+-- Name: update_visited_places_count(); Type: FUNCTION; Schema: public; Owner: docker
+--
+
+CREATE FUNCTION public.update_visited_places_count() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    UPDATE public.profile
+    SET visited_places = (SELECT COUNT(*) FROM public.visited_places WHERE user_id = NEW.user_id)
+    WHERE user_id = NEW.user_id;
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.update_visited_places_count() OWNER TO docker;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- TOC entry 215 (class 1259 OID 16392)
+-- Name: cities; Type: TABLE; Schema: public; Owner: docker
+--
+
+CREATE TABLE public.cities (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL
+);
+
+
+ALTER TABLE public.cities OWNER TO docker;
+
+--
+-- TOC entry 216 (class 1259 OID 16395)
+-- Name: cities_id_seq; Type: SEQUENCE; Schema: public; Owner: docker
+--
+
+CREATE SEQUENCE public.cities_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.cities_id_seq OWNER TO docker;
+
+--
+-- TOC entry 3498 (class 0 OID 0)
+-- Dependencies: 216
+-- Name: cities_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: docker
+--
+
+ALTER SEQUENCE public.cities_id_seq OWNED BY public.cities.id;
+
+
+--
+-- TOC entry 217 (class 1259 OID 16396)
+-- Name: cuisine_types; Type: TABLE; Schema: public; Owner: docker
+--
+
+CREATE TABLE public.cuisine_types (
+    id integer NOT NULL,
+    type character varying(255) NOT NULL,
+    icon character varying(255)
+);
+
+
+ALTER TABLE public.cuisine_types OWNER TO docker;
+
+--
+-- TOC entry 225 (class 1259 OID 16418)
+-- Name: reviews; Type: TABLE; Schema: public; Owner: docker
+--
+
+CREATE TABLE public.reviews (
+    id integer NOT NULL,
+    user_id integer,
+    restaurant_id integer,
+    rating integer,
+    comment text,
+    date_added timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    food_ordered text,
+    CONSTRAINT reviews_rating_check CHECK (((rating >= 1) AND (rating <= 5)))
+);
+
+
+ALTER TABLE public.reviews OWNER TO docker;
+
+--
+-- TOC entry 230 (class 1259 OID 24589)
+-- Name: user_cuisine_preferences; Type: TABLE; Schema: public; Owner: docker
+--
+
+CREATE TABLE public.user_cuisine_preferences (
+    user_id integer NOT NULL,
+    cuisine_id integer NOT NULL
+);
+
+
+ALTER TABLE public.user_cuisine_preferences OWNER TO docker;
+
+--
+-- TOC entry 227 (class 1259 OID 16425)
+-- Name: users; Type: TABLE; Schema: public; Owner: docker
+--
+
+CREATE TABLE public.users (
+    id integer NOT NULL,
+    email character varying NOT NULL,
+    username character varying NOT NULL,
+    password character varying NOT NULL,
+    role public.user_role NOT NULL
+);
+
+
+ALTER TABLE public.users OWNER TO docker;
+
+--
+-- TOC entry 236 (class 1259 OID 32773)
+-- Name: cuisine_preferences_summary; Type: VIEW; Schema: public; Owner: docker
+--
+
+CREATE VIEW public.cuisine_preferences_summary AS
+ SELECT c.id AS cuisine_id,
+    c.type AS cuisine_type,
+    count(DISTINCT u.id) AS number_of_users,
+    count(DISTINCT rev.id) AS number_of_reviews,
+    round(avg(rev.rating), 2) AS average_rating
+   FROM (((public.cuisine_types c
+     LEFT JOIN public.user_cuisine_preferences uc ON ((c.id = uc.cuisine_id)))
+     LEFT JOIN public.users u ON ((uc.user_id = u.id)))
+     LEFT JOIN public.reviews rev ON ((u.id = rev.user_id)))
+  GROUP BY c.id, c.type;
+
+
+ALTER VIEW public.cuisine_preferences_summary OWNER TO docker;
+
+--
+-- TOC entry 218 (class 1259 OID 16401)
+-- Name: cuisine_types_id_seq; Type: SEQUENCE; Schema: public; Owner: docker
+--
+
+CREATE SEQUENCE public.cuisine_types_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.cuisine_types_id_seq OWNER TO docker;
+
+--
+-- TOC entry 3499 (class 0 OID 0)
+-- Dependencies: 218
+-- Name: cuisine_types_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: docker
+--
+
+ALTER SEQUENCE public.cuisine_types_id_seq OWNED BY public.cuisine_types.id;
+
+
+--
+-- TOC entry 219 (class 1259 OID 16402)
+-- Name: favorite_restaurants; Type: TABLE; Schema: public; Owner: docker
+--
+
+CREATE TABLE public.favorite_restaurants (
+    user_id integer NOT NULL,
+    restaurant_id integer NOT NULL
+);
+
+
+ALTER TABLE public.favorite_restaurants OWNER TO docker;
+
+--
+-- TOC entry 234 (class 1259 OID 24640)
+-- Name: friendships; Type: TABLE; Schema: public; Owner: docker
+--
+
+CREATE TABLE public.friendships (
+    friendship_id integer NOT NULL,
+    member1_id integer NOT NULL,
+    member2_id integer NOT NULL
+);
+
+
+ALTER TABLE public.friendships OWNER TO docker;
+
+--
+-- TOC entry 220 (class 1259 OID 16405)
+-- Name: locations; Type: TABLE; Schema: public; Owner: docker
+--
+
+CREATE TABLE public.locations (
+    id integer NOT NULL,
+    address character varying(255) NOT NULL,
+    city_id integer
+);
+
+
+ALTER TABLE public.locations OWNER TO docker;
+
+--
+-- TOC entry 229 (class 1259 OID 24581)
+-- Name: profile; Type: TABLE; Schema: public; Owner: docker
+--
+
+CREATE TABLE public.profile (
+    user_id integer NOT NULL,
+    bio text,
+    picture_path character varying DEFAULT 'public\data\default_profile_photo.jpg'::character varying,
+    visited_places bigint DEFAULT 0
+);
+
+
+ALTER TABLE public.profile OWNER TO docker;
+
+--
+-- TOC entry 223 (class 1259 OID 16412)
+-- Name: restaurants; Type: TABLE; Schema: public; Owner: docker
+--
+
+CREATE TABLE public.restaurants (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    location_id integer,
+    image_path character varying(255)
+);
+
+
+ALTER TABLE public.restaurants OWNER TO docker;
+
+--
+-- TOC entry 235 (class 1259 OID 24670)
+-- Name: feed_view; Type: VIEW; Schema: public; Owner: docker
+--
+
+CREATE VIEW public.feed_view AS
+ SELECT user_username,
+    user_profile_photo,
+    restaurant_name,
+    restaurant_photo,
+    restaurant_location,
+    rating,
+    comment,
+    food_ordered,
+    user_id,
+    date_added
+   FROM ( SELECT u.username AS user_username,
+            pr.picture_path AS user_profile_photo,
+            r.name AS restaurant_name,
+            r.image_path AS restaurant_photo,
+            loc.address AS restaurant_location,
+            rev.rating,
+            rev.comment,
+            rev.food_ordered,
+            rev.user_id,
+            rev.date_added,
+            row_number() OVER (PARTITION BY rev.user_id ORDER BY rev.date_added DESC) AS row_num
+           FROM ((((((public.reviews rev
+             JOIN public.users u ON ((rev.user_id = u.id)))
+             JOIN public.profile pr ON ((rev.user_id = pr.user_id)))
+             JOIN public.restaurants r ON ((rev.restaurant_id = r.id)))
+             JOIN public.locations loc ON ((r.location_id = loc.id)))
+             JOIN public.cities c ON ((loc.city_id = c.id)))
+             JOIN public.friendships f ON (((rev.user_id = f.member1_id) OR (rev.user_id = f.member2_id))))) subquery
+  WHERE (row_num = 1)
+  ORDER BY user_id, date_added DESC;
+
+
+ALTER VIEW public.feed_view OWNER TO docker;
+
+--
+-- TOC entry 233 (class 1259 OID 24639)
+-- Name: friendships_friendship_id_seq; Type: SEQUENCE; Schema: public; Owner: docker
+--
+
+CREATE SEQUENCE public.friendships_friendship_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.friendships_friendship_id_seq OWNER TO docker;
+
+--
+-- TOC entry 3500 (class 0 OID 0)
+-- Dependencies: 233
+-- Name: friendships_friendship_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: docker
+--
+
+ALTER SEQUENCE public.friendships_friendship_id_seq OWNED BY public.friendships.friendship_id;
+
+
+--
+-- TOC entry 221 (class 1259 OID 16408)
+-- Name: locations_id_seq; Type: SEQUENCE; Schema: public; Owner: docker
+--
+
+CREATE SEQUENCE public.locations_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.locations_id_seq OWNER TO docker;
+
+--
+-- TOC entry 3501 (class 0 OID 0)
+-- Dependencies: 221
+-- Name: locations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: docker
+--
+
+ALTER SEQUENCE public.locations_id_seq OWNED BY public.locations.id;
+
+
+--
+-- TOC entry 222 (class 1259 OID 16409)
+-- Name: restaurant_cuisines; Type: TABLE; Schema: public; Owner: docker
+--
+
+CREATE TABLE public.restaurant_cuisines (
+    restaurant_id integer NOT NULL,
+    cuisine_type_id integer NOT NULL
+);
+
+
+ALTER TABLE public.restaurant_cuisines OWNER TO docker;
+
+--
+-- TOC entry 224 (class 1259 OID 16417)
+-- Name: restaurants_id_seq; Type: SEQUENCE; Schema: public; Owner: docker
+--
+
+CREATE SEQUENCE public.restaurants_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.restaurants_id_seq OWNER TO docker;
+
+--
+-- TOC entry 3502 (class 0 OID 0)
+-- Dependencies: 224
+-- Name: restaurants_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: docker
+--
+
+ALTER SEQUENCE public.restaurants_id_seq OWNED BY public.restaurants.id;
+
+
+--
+-- TOC entry 226 (class 1259 OID 16424)
+-- Name: reviews_id_seq; Type: SEQUENCE; Schema: public; Owner: docker
+--
+
+CREATE SEQUENCE public.reviews_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.reviews_id_seq OWNER TO docker;
+
+--
+-- TOC entry 3503 (class 0 OID 0)
+-- Dependencies: 226
+-- Name: reviews_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: docker
+--
+
+ALTER SEQUENCE public.reviews_id_seq OWNED BY public.reviews.id;
+
+
+--
+-- TOC entry 228 (class 1259 OID 16430)
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: docker
+--
+
+CREATE SEQUENCE public.users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.users_id_seq OWNER TO docker;
+
+--
+-- TOC entry 3504 (class 0 OID 0)
+-- Dependencies: 228
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: docker
+--
+
+ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+
+
+--
+-- TOC entry 232 (class 1259 OID 24619)
+-- Name: visited_places; Type: TABLE; Schema: public; Owner: docker
+--
+
+CREATE TABLE public.visited_places (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    restaurant_id integer NOT NULL,
+    visit_date date NOT NULL
+);
+
+
+ALTER TABLE public.visited_places OWNER TO docker;
+
+--
+-- TOC entry 231 (class 1259 OID 24618)
+-- Name: visited_places_id_seq; Type: SEQUENCE; Schema: public; Owner: docker
+--
+
+CREATE SEQUENCE public.visited_places_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.visited_places_id_seq OWNER TO docker;
+
+--
+-- TOC entry 3505 (class 0 OID 0)
+-- Dependencies: 231
+-- Name: visited_places_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: docker
+--
+
+ALTER SEQUENCE public.visited_places_id_seq OWNED BY public.visited_places.id;
+
+
+--
+-- TOC entry 3268 (class 2604 OID 16503)
+-- Name: cities id; Type: DEFAULT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.cities ALTER COLUMN id SET DEFAULT nextval('public.cities_id_seq'::regclass);
+
+
+--
+-- TOC entry 3269 (class 2604 OID 16504)
+-- Name: cuisine_types id; Type: DEFAULT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.cuisine_types ALTER COLUMN id SET DEFAULT nextval('public.cuisine_types_id_seq'::regclass);
+
+
+--
+-- TOC entry 3278 (class 2604 OID 24643)
+-- Name: friendships friendship_id; Type: DEFAULT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.friendships ALTER COLUMN friendship_id SET DEFAULT nextval('public.friendships_friendship_id_seq'::regclass);
+
+
+--
+-- TOC entry 3270 (class 2604 OID 16505)
+-- Name: locations id; Type: DEFAULT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.locations ALTER COLUMN id SET DEFAULT nextval('public.locations_id_seq'::regclass);
+
+
+--
+-- TOC entry 3271 (class 2604 OID 16506)
+-- Name: restaurants id; Type: DEFAULT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.restaurants ALTER COLUMN id SET DEFAULT nextval('public.restaurants_id_seq'::regclass);
+
+
+--
+-- TOC entry 3272 (class 2604 OID 16507)
+-- Name: reviews id; Type: DEFAULT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.reviews ALTER COLUMN id SET DEFAULT nextval('public.reviews_id_seq'::regclass);
+
+
+--
+-- TOC entry 3274 (class 2604 OID 16508)
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- TOC entry 3277 (class 2604 OID 24622)
+-- Name: visited_places id; Type: DEFAULT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.visited_places ALTER COLUMN id SET DEFAULT nextval('public.visited_places_id_seq'::regclass);
+
+
+--
+-- TOC entry 3471 (class 0 OID 16392)
+-- Dependencies: 215
+-- Data for Name: cities; Type: TABLE DATA; Schema: public; Owner: docker
+--
+
+INSERT INTO public.cities VALUES (1, 'Warsaw');
+INSERT INTO public.cities VALUES (2, 'Krakow');
+INSERT INTO public.cities VALUES (3, 'Gdansk');
+
+
+--
+-- TOC entry 3473 (class 0 OID 16396)
+-- Dependencies: 217
+-- Data for Name: cuisine_types; Type: TABLE DATA; Schema: public; Owner: docker
+--
+
+INSERT INTO public.cuisine_types VALUES (2, 'Donut', 'https://img.icons8.com/3d-fluency/94/doughnut.png');
+INSERT INTO public.cuisine_types VALUES (3, 'Pancake', 'https://img.icons8.com/3d-fluency/94/pancake.png');
+INSERT INTO public.cuisine_types VALUES (5, 'Burger', 'https://img.icons8.com/3d-fluency/94/hamburger.png');
+INSERT INTO public.cuisine_types VALUES (6, 'Pizza', 'https://img.icons8.com/3d-fluency/94/salami-pizza.png');
+INSERT INTO public.cuisine_types VALUES (1, 'Polish', 'https://img.icons8.com/fluency/96/poland-circular.png');
+INSERT INTO public.cuisine_types VALUES (4, 'Italian', 'https://img.icons8.com/fluency/48/italy-circular.png');
+INSERT INTO public.cuisine_types VALUES (7, 'Asian', 'https://img.icons8.com/3d-fluency/94/chinese-noodle.png');
+INSERT INTO public.cuisine_types VALUES (8, 'Fast Food', 'https://img.icons8.com/3d-fluency/94/hot-dog.png');
+
+
+--
+-- TOC entry 3475 (class 0 OID 16402)
+-- Dependencies: 219
+-- Data for Name: favorite_restaurants; Type: TABLE DATA; Schema: public; Owner: docker
+--
+
+INSERT INTO public.favorite_restaurants VALUES (7, 19);
+INSERT INTO public.favorite_restaurants VALUES (1, 4);
+INSERT INTO public.favorite_restaurants VALUES (8, 5);
+INSERT INTO public.favorite_restaurants VALUES (2, 18);
+INSERT INTO public.favorite_restaurants VALUES (4, 11);
+INSERT INTO public.favorite_restaurants VALUES (6, 15);
+INSERT INTO public.favorite_restaurants VALUES (10, 14);
+INSERT INTO public.favorite_restaurants VALUES (5, 9);
+INSERT INTO public.favorite_restaurants VALUES (3, 1);
+INSERT INTO public.favorite_restaurants VALUES (12, 7);
+INSERT INTO public.favorite_restaurants VALUES (9, 2);
+INSERT INTO public.favorite_restaurants VALUES (1, 15);
+INSERT INTO public.favorite_restaurants VALUES (7, 8);
+INSERT INTO public.favorite_restaurants VALUES (8, 6);
+INSERT INTO public.favorite_restaurants VALUES (2, 9);
+INSERT INTO public.favorite_restaurants VALUES (4, 20);
+INSERT INTO public.favorite_restaurants VALUES (6, 13);
+INSERT INTO public.favorite_restaurants VALUES (10, 10);
+INSERT INTO public.favorite_restaurants VALUES (5, 3);
+INSERT INTO public.favorite_restaurants VALUES (3, 16);
+INSERT INTO public.favorite_restaurants VALUES (12, 19);
+INSERT INTO public.favorite_restaurants VALUES (9, 14);
+INSERT INTO public.favorite_restaurants VALUES (1, 5);
+INSERT INTO public.favorite_restaurants VALUES (7, 1);
+INSERT INTO public.favorite_restaurants VALUES (8, 12);
+INSERT INTO public.favorite_restaurants VALUES (2, 2);
+INSERT INTO public.favorite_restaurants VALUES (4, 18);
+INSERT INTO public.favorite_restaurants VALUES (6, 11);
+INSERT INTO public.favorite_restaurants VALUES (10, 16);
+INSERT INTO public.favorite_restaurants VALUES (5, 7);
+INSERT INTO public.favorite_restaurants VALUES (3, 20);
+INSERT INTO public.favorite_restaurants VALUES (12, 9);
+INSERT INTO public.favorite_restaurants VALUES (9, 13);
+INSERT INTO public.favorite_restaurants VALUES (1, 11);
+INSERT INTO public.favorite_restaurants VALUES (7, 14);
+INSERT INTO public.favorite_restaurants VALUES (8, 19);
+INSERT INTO public.favorite_restaurants VALUES (2, 12);
+INSERT INTO public.favorite_restaurants VALUES (4, 1);
+INSERT INTO public.favorite_restaurants VALUES (6, 7);
+INSERT INTO public.favorite_restaurants VALUES (10, 9);
+INSERT INTO public.favorite_restaurants VALUES (5, 6);
+INSERT INTO public.favorite_restaurants VALUES (3, 19);
+INSERT INTO public.favorite_restaurants VALUES (9, 18);
+INSERT INTO public.favorite_restaurants VALUES (12, 6);
+INSERT INTO public.favorite_restaurants VALUES (12, 1);
+INSERT INTO public.favorite_restaurants VALUES (12, 13);
+INSERT INTO public.favorite_restaurants VALUES (12, 2);
+INSERT INTO public.favorite_restaurants VALUES (12, 20);
+INSERT INTO public.favorite_restaurants VALUES (12, 14);
+INSERT INTO public.favorite_restaurants VALUES (30, 16);
+INSERT INTO public.favorite_restaurants VALUES (11, 4);
+INSERT INTO public.favorite_restaurants VALUES (11, 10);
+INSERT INTO public.favorite_restaurants VALUES (30, 8);
+INSERT INTO public.favorite_restaurants VALUES (11, 8);
+INSERT INTO public.favorite_restaurants VALUES (11, 2);
+INSERT INTO public.favorite_restaurants VALUES (11, 1);
+INSERT INTO public.favorite_restaurants VALUES (11, 5);
+INSERT INTO public.favorite_restaurants VALUES (11, 3);
+INSERT INTO public.favorite_restaurants VALUES (30, 3);
+INSERT INTO public.favorite_restaurants VALUES (30, 6);
+INSERT INTO public.favorite_restaurants VALUES (30, 12);
+
+
+--
+-- TOC entry 3490 (class 0 OID 24640)
+-- Dependencies: 234
+-- Data for Name: friendships; Type: TABLE DATA; Schema: public; Owner: docker
+--
+
+INSERT INTO public.friendships VALUES (122, 1, 10);
+INSERT INTO public.friendships VALUES (123, 2, 5);
+INSERT INTO public.friendships VALUES (124, 3, 15);
+INSERT INTO public.friendships VALUES (125, 4, 7);
+INSERT INTO public.friendships VALUES (126, 5, 12);
+INSERT INTO public.friendships VALUES (127, 6, 18);
+INSERT INTO public.friendships VALUES (128, 7, 19);
+INSERT INTO public.friendships VALUES (129, 8, 3);
+INSERT INTO public.friendships VALUES (130, 9, 13);
+INSERT INTO public.friendships VALUES (131, 10, 1);
+INSERT INTO public.friendships VALUES (132, 11, 6);
+INSERT INTO public.friendships VALUES (133, 12, 8);
+INSERT INTO public.friendships VALUES (134, 13, 2);
+INSERT INTO public.friendships VALUES (135, 14, 17);
+INSERT INTO public.friendships VALUES (136, 15, 4);
+INSERT INTO public.friendships VALUES (137, 16, 11);
+INSERT INTO public.friendships VALUES (138, 17, 9);
+INSERT INTO public.friendships VALUES (139, 18, 14);
+INSERT INTO public.friendships VALUES (140, 19, 12);
+INSERT INTO public.friendships VALUES (141, 19, 16);
+INSERT INTO public.friendships VALUES (287, 1, 8);
+INSERT INTO public.friendships VALUES (288, 2, 12);
+INSERT INTO public.friendships VALUES (289, 3, 7);
+INSERT INTO public.friendships VALUES (290, 4, 16);
+INSERT INTO public.friendships VALUES (291, 5, 9);
+INSERT INTO public.friendships VALUES (292, 6, 11);
+INSERT INTO public.friendships VALUES (293, 7, 5);
+INSERT INTO public.friendships VALUES (294, 8, 15);
+INSERT INTO public.friendships VALUES (295, 9, 3);
+INSERT INTO public.friendships VALUES (296, 10, 19);
+INSERT INTO public.friendships VALUES (297, 11, 4);
+INSERT INTO public.friendships VALUES (298, 12, 1);
+INSERT INTO public.friendships VALUES (299, 13, 18);
+INSERT INTO public.friendships VALUES (300, 14, 2);
+INSERT INTO public.friendships VALUES (301, 15, 10);
+INSERT INTO public.friendships VALUES (302, 16, 4);
+INSERT INTO public.friendships VALUES (303, 17, 13);
+INSERT INTO public.friendships VALUES (304, 18, 12);
+INSERT INTO public.friendships VALUES (305, 19, 17);
+INSERT INTO public.friendships VALUES (306, 1, 3);
+INSERT INTO public.friendships VALUES (307, 2, 6);
+INSERT INTO public.friendships VALUES (308, 3, 5);
+INSERT INTO public.friendships VALUES (309, 4, 9);
+INSERT INTO public.friendships VALUES (310, 5, 15);
+INSERT INTO public.friendships VALUES (311, 6, 8);
+INSERT INTO public.friendships VALUES (312, 7, 9);
+INSERT INTO public.friendships VALUES (313, 8, 13);
+INSERT INTO public.friendships VALUES (314, 9, 1);
+INSERT INTO public.friendships VALUES (315, 10, 11);
+
+
+--
+-- TOC entry 3476 (class 0 OID 16405)
+-- Dependencies: 220
+-- Data for Name: locations; Type: TABLE DATA; Schema: public; Owner: docker
+--
+
+INSERT INTO public.locations VALUES (1, 'Marszałkowska 1', 1);
+INSERT INTO public.locations VALUES (2, 'Rynek Główny 2', 2);
+INSERT INTO public.locations VALUES (3, 'Długa 3', 3);
+INSERT INTO public.locations VALUES (4, 'Floriańska 10', 2);
+INSERT INTO public.locations VALUES (5, 'Nowa 23', 2);
+INSERT INTO public.locations VALUES (6, 'Nowa 23', 2);
+INSERT INTO public.locations VALUES (7, 'Nowa 23', 2);
+INSERT INTO public.locations VALUES (8, 'Nowa 23', 2);
+INSERT INTO public.locations VALUES (9, 'Nowa 23', 2);
+INSERT INTO public.locations VALUES (10, 'Nowa 23', 2);
+INSERT INTO public.locations VALUES (11, 'Nowa 23', 2);
+INSERT INTO public.locations VALUES (12, 'Nowa 23', 2);
+INSERT INTO public.locations VALUES (13, 'Nowa 23', 2);
+INSERT INTO public.locations VALUES (14, 'Nowa 23', 2);
+INSERT INTO public.locations VALUES (15, 'Nowa 23', 2);
+INSERT INTO public.locations VALUES (16, 'Nowa 23', 2);
+INSERT INTO public.locations VALUES (17, 'Nowa 23', 2);
+INSERT INTO public.locations VALUES (18, 'Nowa 23', 2);
+INSERT INTO public.locations VALUES (19, 'Grodzka', 2);
+INSERT INTO public.locations VALUES (20, 'Goldenowa', 2);
+
+
+--
+-- TOC entry 3485 (class 0 OID 24581)
+-- Dependencies: 229
+-- Data for Name: profile; Type: TABLE DATA; Schema: public; Owner: docker
+--
+
+INSERT INTO public.profile VALUES (14, 'Kucharz domowy eksperymentujący z międzynarodowymi przepisami. Lubi odtwarzać dania z podróży.', 'public\data\default_profile_photo.jpg', 2);
+INSERT INTO public.profile VALUES (15, 'Miłośnik pizzy, który eksploruje unikalne i gourmetowe kreacje pizzy.', 'public\data\default_profile_photo.jpg', 2);
+INSERT INTO public.profile VALUES (16, 'Miłośnik herbaty w podróży odkrywania bogatego świata herbat.', 'public\data\default_profile_photo.jpg', 2);
+INSERT INTO public.profile VALUES (17, 'Aficionado wina i sera. Ceni sobie zestawianie wykwintnych win z serami rzemieślniczymi.', 'public\data\default_profile_photo.jpg', 2);
+INSERT INTO public.profile VALUES (18, 'Obrońca roślinnego stylu życia. Poświęcony eksploracji pysznych wegańskich opcji.', 'public\data\default_profile_photo.jpg', 2);
+INSERT INTO public.profile VALUES (19, 'Eksplorator tradycyjnych kuchni. Ceni doświadczanie autentycznych dań z różnych stron świata.', 'public\data\default_profile_photo.jpg', 2);
+INSERT INTO public.profile VALUES (20, 'Miłośnik klasycznej amerykańskiej kuchni. Burgery, frytki i koktajle mleczne to ulubione dania.', 'public\data\default_profile_photo.jpg', 2);
+INSERT INTO public.profile VALUES (1, 'Miłośnik różnorodnych kuchni. Szczególnie lubi pikantne dania i międzynarodowe jedzenie uliczne.', 'public\data\default_profile_photo.jpg', 3);
+INSERT INTO public.profile VALUES (2, 'Pasjonat opcji wegetariańskich i wegańskich. Lubuje się w poszukiwaniu roślinnych alternatyw.', 'public\data\default_profile_photo.jpg', 3);
+INSERT INTO public.profile VALUES (3, 'Entuzjasta owoców morza, doceniający świeżość smaków z oceanu.', 'public\data\default_profile_photo.jpg', 3);
+INSERT INTO public.profile VALUES (4, 'Awanturnik kulinarny poszukujący egzotycznych i unikalnych doznań smakowych.', 'public\data\default_profile_photo.jpg', 3);
+INSERT INTO public.profile VALUES (5, 'Świadomy zdrowia, skupiony na zrównoważonych i pożywnych posiłkach.', 'public\data\default_profile_photo.jpg', 3);
+INSERT INTO public.profile VALUES (6, 'Mistrz grillowania, który ceni sobie barbecue i soczyste steki.', 'public\data\default_profile_photo.jpg', 3);
+INSERT INTO public.profile VALUES (7, 'Miłośnik comfort food. Klasyki takie jak makaron z serem i burgery są ulubione.', 'public\data\default_profile_photo.jpg', 3);
+INSERT INTO public.profile VALUES (8, 'Aficjonado deserów z dużym słodkim zębem dla ciast i słodyczy.', 'public\data\default_profile_photo.jpg', 3);
+INSERT INTO public.profile VALUES (9, 'Eksplorator kuchni świata. Ceni dania kuchni fusion łączące różnorodne smaki.', 'public\data\default_profile_photo.jpg', 3);
+INSERT INTO public.profile VALUES (10, 'Koneser jedzenia ulicznego. Odnajduje radość w prostocie i odważnych smakach ulicznych przysmaków.', 'public\data\default_profile_photo.jpg', 3);
+INSERT INTO public.profile VALUES (12, 'Awanturniczy smakosz gotów na próbowanie nowych i niekonwencjonalnych dań.', 'public\data\default_profile_photo.jpg', 3);
+INSERT INTO public.profile VALUES (13, 'Fanatyk sushi i sashimi. Ceni sztukę i delikatne smaki kuchni japońskiej.', 'public\data\default_profile_photo.jpg', 3);
+INSERT INTO public.profile VALUES (29, 'New to Grio', 'public\data\default_profile_photo.jpg', 0);
+INSERT INTO public.profile VALUES (30, 'New to Grio', 'public\data\default_profile_photo.jpg', 0);
+INSERT INTO public.profile VALUES (11, 'Miłośnik kawy i brunchy. Zawsze w poszukiwaniu idealnej filiżanki i miejsca na brunch.', 'public\data\default_profile_photo.jpg', 3);
+
+
+--
+-- TOC entry 3478 (class 0 OID 16409)
+-- Dependencies: 222
+-- Data for Name: restaurant_cuisines; Type: TABLE DATA; Schema: public; Owner: docker
+--
+
+INSERT INTO public.restaurant_cuisines VALUES (1, 1);
+INSERT INTO public.restaurant_cuisines VALUES (2, 2);
+INSERT INTO public.restaurant_cuisines VALUES (3, 3);
+INSERT INTO public.restaurant_cuisines VALUES (4, 4);
+INSERT INTO public.restaurant_cuisines VALUES (5, 5);
+INSERT INTO public.restaurant_cuisines VALUES (6, 6);
+INSERT INTO public.restaurant_cuisines VALUES (7, 1);
+INSERT INTO public.restaurant_cuisines VALUES (8, 2);
+INSERT INTO public.restaurant_cuisines VALUES (9, 3);
+INSERT INTO public.restaurant_cuisines VALUES (10, 4);
+INSERT INTO public.restaurant_cuisines VALUES (11, 5);
+INSERT INTO public.restaurant_cuisines VALUES (12, 6);
+INSERT INTO public.restaurant_cuisines VALUES (13, 1);
+INSERT INTO public.restaurant_cuisines VALUES (14, 2);
+INSERT INTO public.restaurant_cuisines VALUES (15, 3);
+INSERT INTO public.restaurant_cuisines VALUES (16, 4);
+INSERT INTO public.restaurant_cuisines VALUES (17, 5);
+INSERT INTO public.restaurant_cuisines VALUES (18, 6);
+INSERT INTO public.restaurant_cuisines VALUES (19, 1);
+INSERT INTO public.restaurant_cuisines VALUES (20, 2);
+INSERT INTO public.restaurant_cuisines VALUES (1, 3);
+INSERT INTO public.restaurant_cuisines VALUES (2, 4);
+INSERT INTO public.restaurant_cuisines VALUES (3, 5);
+INSERT INTO public.restaurant_cuisines VALUES (4, 6);
+INSERT INTO public.restaurant_cuisines VALUES (5, 1);
+INSERT INTO public.restaurant_cuisines VALUES (6, 2);
+INSERT INTO public.restaurant_cuisines VALUES (7, 3);
+INSERT INTO public.restaurant_cuisines VALUES (8, 4);
+INSERT INTO public.restaurant_cuisines VALUES (9, 5);
+INSERT INTO public.restaurant_cuisines VALUES (10, 6);
+INSERT INTO public.restaurant_cuisines VALUES (11, 1);
+INSERT INTO public.restaurant_cuisines VALUES (12, 2);
+INSERT INTO public.restaurant_cuisines VALUES (13, 3);
+INSERT INTO public.restaurant_cuisines VALUES (14, 4);
+INSERT INTO public.restaurant_cuisines VALUES (15, 5);
+INSERT INTO public.restaurant_cuisines VALUES (16, 6);
+INSERT INTO public.restaurant_cuisines VALUES (17, 1);
+INSERT INTO public.restaurant_cuisines VALUES (18, 2);
+INSERT INTO public.restaurant_cuisines VALUES (19, 3);
+INSERT INTO public.restaurant_cuisines VALUES (20, 4);
+INSERT INTO public.restaurant_cuisines VALUES (1, 5);
+INSERT INTO public.restaurant_cuisines VALUES (2, 6);
+INSERT INTO public.restaurant_cuisines VALUES (3, 1);
+INSERT INTO public.restaurant_cuisines VALUES (4, 2);
+INSERT INTO public.restaurant_cuisines VALUES (5, 3);
+INSERT INTO public.restaurant_cuisines VALUES (6, 4);
+INSERT INTO public.restaurant_cuisines VALUES (7, 5);
+INSERT INTO public.restaurant_cuisines VALUES (8, 6);
+INSERT INTO public.restaurant_cuisines VALUES (21, 5);
+INSERT INTO public.restaurant_cuisines VALUES (22, 5);
+INSERT INTO public.restaurant_cuisines VALUES (23, 5);
+INSERT INTO public.restaurant_cuisines VALUES (24, 5);
+INSERT INTO public.restaurant_cuisines VALUES (25, 5);
+INSERT INTO public.restaurant_cuisines VALUES (26, 5);
+INSERT INTO public.restaurant_cuisines VALUES (27, 5);
+INSERT INTO public.restaurant_cuisines VALUES (28, 5);
+INSERT INTO public.restaurant_cuisines VALUES (29, 5);
+INSERT INTO public.restaurant_cuisines VALUES (30, 5);
+INSERT INTO public.restaurant_cuisines VALUES (31, 5);
+INSERT INTO public.restaurant_cuisines VALUES (32, 5);
+INSERT INTO public.restaurant_cuisines VALUES (33, 5);
+INSERT INTO public.restaurant_cuisines VALUES (34, 5);
+INSERT INTO public.restaurant_cuisines VALUES (35, 1);
+INSERT INTO public.restaurant_cuisines VALUES (36, 5);
+
+
+--
+-- TOC entry 3479 (class 0 OID 16412)
+-- Dependencies: 223
+-- Data for Name: restaurants; Type: TABLE DATA; Schema: public; Owner: docker
+--
+
+INSERT INTO public.restaurants VALUES (1, 'Trattoria', 1, '../../public/data/tratoria_logo_4C.jpg');
+INSERT INTO public.restaurants VALUES (5, 'Palce Lizać', 1, '../../public/data/burger.jpg');
+INSERT INTO public.restaurants VALUES (6, 'Kulinarne Rozkosze', 2, '../../public/data/burger.jpg');
+INSERT INTO public.restaurants VALUES (7, 'Smakowite Kąski', 3, '../../public/data/burger.jpg');
+INSERT INTO public.restaurants VALUES (8, 'Pikantne Przeżycia', 4, '../../public/data/burger.jpg');
+INSERT INTO public.restaurants VALUES (9, 'Gastronomiczny Raj', 1, '../../public/data/burger.jpg');
+INSERT INTO public.restaurants VALUES (10, 'Apetyczna Podróż', 2, '../../public/data/burger.jpg');
+INSERT INTO public.restaurants VALUES (11, 'Zmysłowy Smak', 3, '../../public/data/burger.jpg');
+INSERT INTO public.restaurants VALUES (12, 'Kulinarne Wakacje', 4, '../../public/data/burger.jpg');
+INSERT INTO public.restaurants VALUES (13, 'Smakoszowskie Odkrycia', 1, '../../public/data/burger.jpg');
+INSERT INTO public.restaurants VALUES (14, 'Kuchenne Klimaty', 2, '../../public/data/burger.jpg');
+INSERT INTO public.restaurants VALUES (15, 'Delikatesowe Poddasze', 3, '../../public/data/burger.jpg');
+INSERT INTO public.restaurants VALUES (16, 'Podniebienne Cudo', 4, '../../public/data/burger.jpg');
+INSERT INTO public.restaurants VALUES (17, 'Fantastyczna Feeria Smaków', 1, '../../public/data/burger.jpg');
+INSERT INTO public.restaurants VALUES (18, 'Kulinarna Kraina', 2, '../../public/data/burger.jpg');
+INSERT INTO public.restaurants VALUES (19, 'Cudowny Chłód', 3, '../../public/data/burger.jpg');
+INSERT INTO public.restaurants VALUES (20, 'Kulinarne Konstelacje', 4, '../../public/data/burger.jpg');
+INSERT INTO public.restaurants VALUES (2, 'McDonald`s', 4, '../../public/data/McDonald_logo.png');
+INSERT INTO public.restaurants VALUES (3, 'Restauracja Krakowska', 2, '../../public/data/burger.jpg');
+INSERT INTO public.restaurants VALUES (4, 'Rypka', 3, '../../public/data/rypka.png');
+INSERT INTO public.restaurants VALUES (25, 'KFC', 9, '../../public/data/tratoria_logo_4C.jpg');
+INSERT INTO public.restaurants VALUES (26, 'KFC', 10, '../../public/data/tratoria_logo_4C.jpg');
+INSERT INTO public.restaurants VALUES (34, 'KFC', 18, '../../public/data/tratoria_logo_4C.jpg');
+INSERT INTO public.restaurants VALUES (35, 'Kebab', 19, '../../public/data/tratoria_logo_4C.jpg');
+INSERT INTO public.restaurants VALUES (21, 'Nowa pierogarnia
+', 5, '../../public/data/tratoria_logo_4C.jpg');
+INSERT INTO public.restaurants VALUES (22, 'Tratoria
+', 6, '../../public/data/tratoria_logo_4C.jpg');
+INSERT INTO public.restaurants VALUES (23, 'U Józka', 7, '../../public/data/tratoria_logo_4C.jpg');
+INSERT INTO public.restaurants VALUES (24, 'U Andrzeja
+', 8, '../../public/data/tratoria_logo_4C.jpg');
+INSERT INTO public.restaurants VALUES (27, 'Wiemy co jemy', 11, '../../public/data/tratoria_logo_4C.jpg');
+INSERT INTO public.restaurants VALUES (28, 'As na talerzu', 12, '../../public/data/tratoria_logo_4C.jpg');
+INSERT INTO public.restaurants VALUES (29, 'Japka w ciesice', 13, '../../public/data/tratoria_logo_4C.jpg');
+INSERT INTO public.restaurants VALUES (30, 'Grucha', 14, '../../public/data/tratoria_logo_4C.jpg');
+INSERT INTO public.restaurants VALUES (31, 'Po gruszkach', 15, '../../public/data/tratoria_logo_4C.jpg');
+INSERT INTO public.restaurants VALUES (32, 'Ali', 16, '../../public/data/tratoria_logo_4C.jpg');
+INSERT INTO public.restaurants VALUES (33, 'Teraz Fryta', 17, '../../public/data/tratoria_logo_4C.jpg');
+INSERT INTO public.restaurants VALUES (36, 'Pod Psem', 20, '../../public/data/golden.jpg');
+
+
+--
+-- TOC entry 3481 (class 0 OID 16418)
+-- Dependencies: 225
+-- Data for Name: reviews; Type: TABLE DATA; Schema: public; Owner: docker
+--
+
+INSERT INTO public.reviews VALUES (1, 1, 9, 3, 'Dość przeciętne jedzenie, nic specjalnego.', '2023-12-01 00:00:00', 'Pizza Diavola');
+INSERT INTO public.reviews VALUES (2, 2, 11, 5, 'Fantastyczne miejsce, polecam każdemu smakoszowi!', '2023-12-02 00:00:00', 'Chicken Alfredo Pasta');
+INSERT INTO public.reviews VALUES (3, 3, 13, 2, 'Jedzenie było średnie, nie wrócę tam ponownie.', '2023-12-03 00:00:00', 'Grilled Shrimp Skewers');
+INSERT INTO public.reviews VALUES (4, 4, 15, 4, 'Smaczne potrawy, miła obsługa.', '2023-12-04 00:00:00', 'Margherita Pizza');
+INSERT INTO public.reviews VALUES (45, 11, 3, 1, 'No dobre to było', '2024-01-07 15:25:16', 'Caesar Salad');
+INSERT INTO public.reviews VALUES (10, 10, 8, 3, 'Przeciętne miejsce, jedzenie mogło być lepsze.', '2023-12-10 00:00:00', 'Chicken Parmesan');
+INSERT INTO public.reviews VALUES (11, 11, 10, 4, 'Bardzo przyjemne doświadczenie, polecam spróbować.', '2023-12-11 00:00:00', 'Seafood Risotto');
+INSERT INTO public.reviews VALUES (12, 12, 12, 2, 'Nie było warte mojego czasu i pieniędzy.', '2023-12-12 00:00:00', 'Caprese Salad');
+INSERT INTO public.reviews VALUES (13, 1, 14, 5, 'Doskonałe dania, jedzenie było rewelacyjne.', '2023-12-13 00:00:00', 'Penne alla Vodka');
+INSERT INTO public.reviews VALUES (14, 2, 16, 4, 'Miła atmosfera, jedzenie smakowało wyśmienicie.', '2023-12-14 00:00:00', 'Chocolate Fondant');
+INSERT INTO public.reviews VALUES (15, 3, 18, 3, 'Nie polecam, obsługa była bardzo nieprofesjonalna.', '2023-12-15 00:00:00', 'Beef Carpaccio');
+INSERT INTO public.reviews VALUES (17, 5, 1, 4, 'Bardzo dobre jedzenie, warto spróbować.', '2023-12-17 00:00:00', 'Lobster Ravioli');
+INSERT INTO public.reviews VALUES (19, 7, 5, 5, 'Fantastyczne miejsce, jedzenie było wyjątkowe.', '2023-12-19 00:00:00', 'Mushroom Risotto');
+INSERT INTO public.reviews VALUES (20, 8, 7, 3, 'Przyjemne doświadczenie, ale jedzenie mogło być lepsze.', '2023-12-20 00:00:00', 'Cheesecake');
+INSERT INTO public.reviews VALUES (21, 9, 9, 4, 'Smaczne potrawy, choć trochę drogie.', '2023-12-21 00:00:00', 'Ravioli with Pesto Sauce');
+INSERT INTO public.reviews VALUES (23, 11, 13, 5, 'Najlepsza restauracja, w jakiej kiedykolwiek byłem!', '2023-12-23 00:00:00', 'Vegetable Stir-Fry');
+INSERT INTO public.reviews VALUES (24, 12, 15, 4, 'Bardzo dobre dania, ale trochę zbyt głośno.', '2023-12-24 00:00:00', 'Margarita Flatbread');
+INSERT INTO public.reviews VALUES (25, 1, 17, 3, 'Przeciętne miejsce, jedzenie było przeciętne.', '2023-12-25 00:00:00', 'Chicken Caesar Wrap');
+INSERT INTO public.reviews VALUES (26, 2, 19, 5, 'Niesamowite jedzenie, polecam każdemu.', '2023-12-26 00:00:00', 'Eggplant Parmesan');
+INSERT INTO public.reviews VALUES (27, 3, 2, 4, 'Miła atmosfera, jedzenie smakowało doskonale.', '2023-12-27 00:00:00', 'Sushi Platter');
+INSERT INTO public.reviews VALUES (29, 5, 6, 5, 'Doskonałe doświadczenie kulinarne!', '2023-12-29 00:00:00', 'Chocolate Mousse');
+INSERT INTO public.reviews VALUES (31, 7, 10, 2, 'Nie zachwyciło mnie, obsługa była jednak przyzwoita.', '2023-12-31 00:00:00', 'Shrimp Scampi');
+INSERT INTO public.reviews VALUES (32, 8, 12, 5, 'Bardzo dobre jedzenie, polecam każdemu.', '2024-01-01 00:00:00', 'Margherita Flatbread');
+INSERT INTO public.reviews VALUES (33, 9, 14, 4, 'Przyjemne miejsce, smaczne jedzenie.', '2024-01-02 00:00:00', 'Chicken Quesadilla');
+INSERT INTO public.reviews VALUES (5, 5, 17, 5, 'Doskonała jakość jedzenia, atmosfera również świetna.', '2023-12-05 12:53:00', 'Spaghetti Bolognese');
+INSERT INTO public.reviews VALUES (6, 6, 19, 3, 'Nie był zachwycony jedzeniem, ale obsługa zasługuje na pochwałę.', '2023-12-06 10:25:00', 'Caesar Salad');
+INSERT INTO public.reviews VALUES (7, 7, 2, 4, 'Dobre jedzenie, ale nieco zbyt drogie.', '2023-12-07 11:11:00', 'Vegetarian Lasagna');
+INSERT INTO public.reviews VALUES (8, 8, 4, 1, 'Nigdy więcej, obsługa była okropna.', '2023-12-08 10:00:00', 'Tomato Basil Bruschetta');
+INSERT INTO public.reviews VALUES (9, 9, 6, 5, 'Najlepsze dania we wszystkich restauracjach w okolicy!', '2023-12-09 20:00:00', 'Tiramisu');
+INSERT INTO public.reviews VALUES (39, 11, 2, 5, 'Nie lubie', '2024-01-03 20:56:23', 'McWrap');
+INSERT INTO public.reviews VALUES (42, 11, 5, 3, 'asdasd', '2024-01-04 14:23:20', 'asd');
+INSERT INTO public.reviews VALUES (43, 30, 4, 1, 'Lubie ryby', '2024-01-06 18:39:46', 'Filet');
+INSERT INTO public.reviews VALUES (44, 11, 1, 1, 'Ale kox ta restauracja', '2024-01-06 21:52:21', 'Mak');
+
+
+--
+-- TOC entry 3486 (class 0 OID 24589)
+-- Dependencies: 230
+-- Data for Name: user_cuisine_preferences; Type: TABLE DATA; Schema: public; Owner: docker
+--
+
+INSERT INTO public.user_cuisine_preferences VALUES (1, 1);
+INSERT INTO public.user_cuisine_preferences VALUES (1, 2);
+INSERT INTO public.user_cuisine_preferences VALUES (2, 3);
+INSERT INTO public.user_cuisine_preferences VALUES (2, 4);
+INSERT INTO public.user_cuisine_preferences VALUES (3, 5);
+INSERT INTO public.user_cuisine_preferences VALUES (3, 6);
+INSERT INTO public.user_cuisine_preferences VALUES (4, 7);
+INSERT INTO public.user_cuisine_preferences VALUES (4, 8);
+INSERT INTO public.user_cuisine_preferences VALUES (5, 1);
+INSERT INTO public.user_cuisine_preferences VALUES (5, 2);
+INSERT INTO public.user_cuisine_preferences VALUES (6, 3);
+INSERT INTO public.user_cuisine_preferences VALUES (6, 4);
+INSERT INTO public.user_cuisine_preferences VALUES (7, 5);
+INSERT INTO public.user_cuisine_preferences VALUES (7, 6);
+INSERT INTO public.user_cuisine_preferences VALUES (8, 7);
+INSERT INTO public.user_cuisine_preferences VALUES (8, 8);
+INSERT INTO public.user_cuisine_preferences VALUES (9, 1);
+INSERT INTO public.user_cuisine_preferences VALUES (9, 3);
+INSERT INTO public.user_cuisine_preferences VALUES (10, 2);
+INSERT INTO public.user_cuisine_preferences VALUES (10, 4);
+INSERT INTO public.user_cuisine_preferences VALUES (11, 5);
+INSERT INTO public.user_cuisine_preferences VALUES (11, 7);
+INSERT INTO public.user_cuisine_preferences VALUES (12, 6);
+INSERT INTO public.user_cuisine_preferences VALUES (12, 8);
+INSERT INTO public.user_cuisine_preferences VALUES (13, 1);
+INSERT INTO public.user_cuisine_preferences VALUES (13, 2);
+INSERT INTO public.user_cuisine_preferences VALUES (14, 3);
+INSERT INTO public.user_cuisine_preferences VALUES (14, 4);
+INSERT INTO public.user_cuisine_preferences VALUES (15, 5);
+INSERT INTO public.user_cuisine_preferences VALUES (15, 6);
+INSERT INTO public.user_cuisine_preferences VALUES (16, 7);
+INSERT INTO public.user_cuisine_preferences VALUES (16, 8);
+INSERT INTO public.user_cuisine_preferences VALUES (17, 1);
+INSERT INTO public.user_cuisine_preferences VALUES (17, 3);
+INSERT INTO public.user_cuisine_preferences VALUES (18, 2);
+INSERT INTO public.user_cuisine_preferences VALUES (18, 4);
+INSERT INTO public.user_cuisine_preferences VALUES (19, 5);
+INSERT INTO public.user_cuisine_preferences VALUES (19, 7);
+INSERT INTO public.user_cuisine_preferences VALUES (20, 6);
+INSERT INTO public.user_cuisine_preferences VALUES (20, 8);
+
+
+--
+-- TOC entry 3483 (class 0 OID 16425)
+-- Dependencies: 227
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: docker
+--
+
+INSERT INTO public.users VALUES (1, 'user1@example.com', 'CreativeUser1', '$2a$12$w.dHairgBcrq9mknDiqqtedFROC41HcqGqf6YBFHnz9KeRbSBPyaG', 'admin');
+INSERT INTO public.users VALUES (2, 'u2@example.com', 'ArtisticExplorer', '$2a$12$w.dHairgBcrq9mknDiqqtedFROC41HcqGqf6YBFHnz9KeRbSBPyaG', 'normal');
+INSERT INTO public.users VALUES (3, 'mail3@example.com', 'FlavorfulGuru', '$2a$12$w.dHairgBcrq9mknDiqqtedFROC41HcqGqf6YBFHnz9KeRbSBPyaG', 'restaurateur');
+INSERT INTO public.users VALUES (4, 'u4@example.com', 'VelvetVoyager', '$2a$12$w.dHairgBcrq9mknDiqqtedFROC41HcqGqf6YBFHnz9KeRbSBPyaG', 'admin');
+INSERT INTO public.users VALUES (5, 'sapphire@example.com', 'SapphireSculptor', '$2a$12$w.dHairgBcrq9mknDiqqtedFROC41HcqGqf6YBFHnz9KeRbSBPyaG', 'normal');
+INSERT INTO public.users VALUES (6, 'user6@example.com', 'RadiantRaconteur', '$2a$12$w.dHairgBcrq9mknDiqqtedFROC41HcqGqf6YBFHnz9KeRbSBPyaG', 'restaurateur');
+INSERT INTO public.users VALUES (7, 'maven@example.com', 'MajesticMaven', '$2a$12$w.dHairgBcrq9mknDiqqtedFROC41HcqGqf6YBFHnz9KeRbSBPyaG', 'admin');
+INSERT INTO public.users VALUES (8, 'ethereal@example.com', 'EtherealEnigma', '$2a$12$w.dHairgBcrq9mknDiqqtedFROC41HcqGqf6YBFHnz9KeRbSBPyaG', 'normal');
+INSERT INTO public.users VALUES (9, 'oracle@example.com', 'OpulentOracle', '$2a$12$w.dHairgBcrq9mknDiqqtedFROC41HcqGqf6YBFHnz9KeRbSBPyaG', 'restaurateur');
+INSERT INTO public.users VALUES (10, 'zenith@example.com', 'ZenithZealot', '$2a$12$w.dHairgBcrq9mknDiqqtedFROC41HcqGqf6YBFHnz9KeRbSBPyaG', 'admin');
+INSERT INTO public.users VALUES (12, 'a@b.pl', 'AB', '$2a$12$w.dHairgBcrq9mknDiqqtedFROC41HcqGqf6YBFHnz9KeRbSBPyaG', 'normal');
+INSERT INTO public.users VALUES (13, 'gesler@haha.pl', 'MagdaGesler', '$2a$12$w.dHairgBcrq9mknDiqqtedFROC41HcqGqf6YBFHnz9KeRbSBPyaG', 'restaurateur');
+INSERT INTO public.users VALUES (14, 'kwa@wp.pl', 'kwak', '$2a$12$w.dHairgBcrq9mknDiqqtedFROC41HcqGqf6YBFHnz9KeRbSBPyaG', 'normal');
+INSERT INTO public.users VALUES (15, 'asd@wp.pl', 'kwakwa', '$2y$10$XsX66a99kPMwtjX22F4Hc.U0LJDxas7mtBMyLN8hQRd0G2qdSWe5W', 'normal');
+INSERT INTO public.users VALUES (16, 'test@wp.pl', 'tester', '$2y$10$mPv0Mz5mZpFwHwVHaUbLgOqjS5LAkl5gFcTBvyGrw/hHflez4IPW6', 'normal');
+INSERT INTO public.users VALUES (17, 'test@wp.pl', 'tester', '$2y$10$AiySgpOj2yAEVhlBdo.ADeMTLTsI9RR4rD0r3i1dOzFAWLoEgpFJ2', 'normal');
+INSERT INTO public.users VALUES (18, 'asdzxc@asdf.pl', 'asd', '$2y$10$EwU0TR7mvEIDnhD2POlo4./H0gtxhvyJMEQyiFqTKWIjT6o5sozGC', 'normal');
+INSERT INTO public.users VALUES (19, 'asdzxcasdqwe@wp.pl', 'asd', '$2y$10$.Q7hM72IuGGhi3YZvH7e2.DeAnywFeGqJWD/Oar3JjpEoIMlChKKO', 'normal');
+INSERT INTO public.users VALUES (20, 'p@a.wp', 'PanAd', '$2y$10$8xb3hZmih4x5n2F5/bBrweozcWYCUxZSmQ9ncnkGO.0pAo/wlbUqC', 'normal');
+INSERT INTO public.users VALUES (29, 'em@wp.pl', 'em', '$2y$10$mXy5osLg6gVasaGL9qHUQOLmjts4CH9K72y4o7I/8JAjgsEVbIh9W', 'normal');
+INSERT INTO public.users VALUES (30, 'ws@wp.pl', 'ws', '$2y$10$8HdjjMzFslYz.BBb1e2ZSuRFGOpXIPp5NdmPLas3.J5ijL./TFU2i', 'normal');
+INSERT INTO public.users VALUES (11, 'mptb@wp.pl', 'MPTB', '$2y$10$YwNeeG2byuQC7UwECd00iuIvFuNoFUIGYofNxrKoRLbKeJgzo/Ka.', 'admin');
+
+
+--
+-- TOC entry 3488 (class 0 OID 24619)
+-- Dependencies: 232
+-- Data for Name: visited_places; Type: TABLE DATA; Schema: public; Owner: docker
+--
+
+INSERT INTO public.visited_places VALUES (1, 1, 5, '2022-10-15');
+INSERT INTO public.visited_places VALUES (2, 2, 8, '2022-09-20');
+INSERT INTO public.visited_places VALUES (3, 3, 12, '2022-11-05');
+INSERT INTO public.visited_places VALUES (4, 4, 3, '2022-08-12');
+INSERT INTO public.visited_places VALUES (5, 5, 18, '2022-10-30');
+INSERT INTO public.visited_places VALUES (6, 6, 10, '2022-09-02');
+INSERT INTO public.visited_places VALUES (7, 7, 16, '2022-11-18');
+INSERT INTO public.visited_places VALUES (8, 8, 7, '2022-08-25');
+INSERT INTO public.visited_places VALUES (9, 9, 1, '2022-10-08');
+INSERT INTO public.visited_places VALUES (10, 10, 14, '2022-09-12');
+INSERT INTO public.visited_places VALUES (11, 11, 9, '2022-11-01');
+INSERT INTO public.visited_places VALUES (12, 12, 2, '2022-08-05');
+INSERT INTO public.visited_places VALUES (13, 13, 20, '2022-10-22');
+INSERT INTO public.visited_places VALUES (14, 14, 4, '2022-09-15');
+INSERT INTO public.visited_places VALUES (15, 15, 11, '2022-11-08');
+INSERT INTO public.visited_places VALUES (16, 16, 6, '2022-08-18');
+INSERT INTO public.visited_places VALUES (17, 17, 19, '2022-10-01');
+INSERT INTO public.visited_places VALUES (18, 18, 13, '2022-09-25');
+INSERT INTO public.visited_places VALUES (19, 19, 15, '2022-11-10');
+INSERT INTO public.visited_places VALUES (20, 20, 17, '2022-08-28');
+INSERT INTO public.visited_places VALUES (21, 1, 5, '2022-06-12');
+INSERT INTO public.visited_places VALUES (22, 2, 11, '2022-07-08');
+INSERT INTO public.visited_places VALUES (23, 3, 7, '2022-08-25');
+INSERT INTO public.visited_places VALUES (24, 4, 13, '2022-06-18');
+INSERT INTO public.visited_places VALUES (25, 5, 9, '2022-08-02');
+INSERT INTO public.visited_places VALUES (26, 6, 4, '2022-07-15');
+INSERT INTO public.visited_places VALUES (27, 7, 20, '2022-06-22');
+INSERT INTO public.visited_places VALUES (28, 8, 6, '2022-08-10');
+INSERT INTO public.visited_places VALUES (29, 9, 16, '2022-07-28');
+INSERT INTO public.visited_places VALUES (30, 10, 8, '2022-06-14');
+INSERT INTO public.visited_places VALUES (31, 11, 1, '2022-08-05');
+INSERT INTO public.visited_places VALUES (32, 12, 14, '2022-07-20');
+INSERT INTO public.visited_places VALUES (33, 13, 19, '2022-06-26');
+INSERT INTO public.visited_places VALUES (34, 14, 3, '2022-08-12');
+INSERT INTO public.visited_places VALUES (35, 15, 10, '2022-07-16');
+INSERT INTO public.visited_places VALUES (36, 16, 2, '2022-06-30');
+INSERT INTO public.visited_places VALUES (37, 17, 12, '2022-08-08');
+INSERT INTO public.visited_places VALUES (38, 18, 18, '2022-07-24');
+INSERT INTO public.visited_places VALUES (39, 19, 15, '2022-06-16');
+INSERT INTO public.visited_places VALUES (40, 20, 17, '2022-08-01');
+INSERT INTO public.visited_places VALUES (41, 1, 20, '2022-07-10');
+INSERT INTO public.visited_places VALUES (42, 2, 8, '2022-06-22');
+INSERT INTO public.visited_places VALUES (43, 3, 4, '2022-08-15');
+INSERT INTO public.visited_places VALUES (44, 4, 14, '2022-07-18');
+INSERT INTO public.visited_places VALUES (45, 5, 10, '2022-06-25');
+INSERT INTO public.visited_places VALUES (46, 6, 5, '2022-08-05');
+INSERT INTO public.visited_places VALUES (47, 7, 2, '2022-07-12');
+INSERT INTO public.visited_places VALUES (48, 8, 9, '2022-06-28');
+INSERT INTO public.visited_places VALUES (49, 9, 16, '2022-08-10');
+INSERT INTO public.visited_places VALUES (50, 10, 11, '2022-07-14');
+INSERT INTO public.visited_places VALUES (51, 11, 7, '2022-06-30');
+INSERT INTO public.visited_places VALUES (52, 12, 1, '2022-08-03');
+INSERT INTO public.visited_places VALUES (53, 13, 19, '2022-07-16');
+
+
+--
+-- TOC entry 3506 (class 0 OID 0)
+-- Dependencies: 216
+-- Name: cities_id_seq; Type: SEQUENCE SET; Schema: public; Owner: docker
+--
+
+SELECT pg_catalog.setval('public.cities_id_seq', 3, true);
+
+
+--
+-- TOC entry 3507 (class 0 OID 0)
+-- Dependencies: 218
+-- Name: cuisine_types_id_seq; Type: SEQUENCE SET; Schema: public; Owner: docker
+--
+
+SELECT pg_catalog.setval('public.cuisine_types_id_seq', 8, true);
+
+
+--
+-- TOC entry 3508 (class 0 OID 0)
+-- Dependencies: 233
+-- Name: friendships_friendship_id_seq; Type: SEQUENCE SET; Schema: public; Owner: docker
+--
+
+SELECT pg_catalog.setval('public.friendships_friendship_id_seq', 315, true);
+
+
+--
+-- TOC entry 3509 (class 0 OID 0)
+-- Dependencies: 221
+-- Name: locations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: docker
+--
+
+SELECT pg_catalog.setval('public.locations_id_seq', 20, true);
+
+
+--
+-- TOC entry 3510 (class 0 OID 0)
+-- Dependencies: 224
+-- Name: restaurants_id_seq; Type: SEQUENCE SET; Schema: public; Owner: docker
+--
+
+SELECT pg_catalog.setval('public.restaurants_id_seq', 36, true);
+
+
+--
+-- TOC entry 3511 (class 0 OID 0)
+-- Dependencies: 226
+-- Name: reviews_id_seq; Type: SEQUENCE SET; Schema: public; Owner: docker
+--
+
+SELECT pg_catalog.setval('public.reviews_id_seq', 45, true);
+
+
+--
+-- TOC entry 3512 (class 0 OID 0)
+-- Dependencies: 228
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: docker
+--
+
+SELECT pg_catalog.setval('public.users_id_seq', 30, true);
+
+
+--
+-- TOC entry 3513 (class 0 OID 0)
+-- Dependencies: 231
+-- Name: visited_places_id_seq; Type: SEQUENCE SET; Schema: public; Owner: docker
+--
+
+SELECT pg_catalog.setval('public.visited_places_id_seq', 53, true);
+
+
+--
+-- TOC entry 3301 (class 2606 OID 24587)
+-- Name: profile Profile_pkey; Type: CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.profile
+    ADD CONSTRAINT "Profile_pkey" PRIMARY KEY (user_id);
+
+
+--
+-- TOC entry 3281 (class 2606 OID 16438)
+-- Name: cities cities_name_key; Type: CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.cities
+    ADD CONSTRAINT cities_name_key UNIQUE (name);
+
+
+--
+-- TOC entry 3283 (class 2606 OID 16440)
+-- Name: cities cities_pkey; Type: CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.cities
+    ADD CONSTRAINT cities_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3285 (class 2606 OID 16442)
+-- Name: cuisine_types cuisine_types_pkey; Type: CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.cuisine_types
+    ADD CONSTRAINT cuisine_types_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3287 (class 2606 OID 16444)
+-- Name: cuisine_types cuisine_types_type_key; Type: CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.cuisine_types
+    ADD CONSTRAINT cuisine_types_type_key UNIQUE (type);
+
+
+--
+-- TOC entry 3289 (class 2606 OID 16446)
+-- Name: favorite_restaurants favorite_restaurants_pkey; Type: CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.favorite_restaurants
+    ADD CONSTRAINT favorite_restaurants_pkey PRIMARY KEY (user_id, restaurant_id);
+
+
+--
+-- TOC entry 3307 (class 2606 OID 24647)
+-- Name: friendships friendships_member1_id_member2_id_key; Type: CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.friendships
+    ADD CONSTRAINT friendships_member1_id_member2_id_key UNIQUE (member1_id, member2_id);
+
+
+--
+-- TOC entry 3309 (class 2606 OID 24645)
+-- Name: friendships friendships_pkey; Type: CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.friendships
+    ADD CONSTRAINT friendships_pkey PRIMARY KEY (friendship_id);
+
+
+--
+-- TOC entry 3291 (class 2606 OID 16448)
+-- Name: locations locations_pkey; Type: CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.locations
+    ADD CONSTRAINT locations_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3293 (class 2606 OID 16450)
+-- Name: restaurant_cuisines restaurant_cuisines_pkey; Type: CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.restaurant_cuisines
+    ADD CONSTRAINT restaurant_cuisines_pkey PRIMARY KEY (restaurant_id, cuisine_type_id);
+
+
+--
+-- TOC entry 3295 (class 2606 OID 16452)
+-- Name: restaurants restaurants_pkey; Type: CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.restaurants
+    ADD CONSTRAINT restaurants_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3297 (class 2606 OID 16454)
+-- Name: reviews reviews_pkey; Type: CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3303 (class 2606 OID 24593)
+-- Name: user_cuisine_preferences user_cuisine_preferences_pkey; Type: CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.user_cuisine_preferences
+    ADD CONSTRAINT user_cuisine_preferences_pkey PRIMARY KEY (user_id, cuisine_id);
+
+
+--
+-- TOC entry 3299 (class 2606 OID 16456)
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3305 (class 2606 OID 24624)
+-- Name: visited_places visited_places_pkey; Type: CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.visited_places
+    ADD CONSTRAINT visited_places_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3325 (class 2620 OID 24637)
+-- Name: visited_places after_insert_visited_places; Type: TRIGGER; Schema: public; Owner: docker
+--
+
+CREATE TRIGGER after_insert_visited_places AFTER INSERT ON public.visited_places FOR EACH ROW EXECUTE FUNCTION public.update_visited_places_count();
+
+
+--
+-- TOC entry 3319 (class 2606 OID 24664)
+-- Name: user_cuisine_preferences FK_cuisine; Type: FK CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.user_cuisine_preferences
+    ADD CONSTRAINT "FK_cuisine" FOREIGN KEY (cuisine_id) REFERENCES public.cuisine_types(id) NOT VALID;
+
+
+--
+-- TOC entry 3320 (class 2606 OID 24659)
+-- Name: user_cuisine_preferences FK_user; Type: FK CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.user_cuisine_preferences
+    ADD CONSTRAINT "FK_user" FOREIGN KEY (user_id) REFERENCES public.users(id) NOT VALID;
+
+
+--
+-- TOC entry 3310 (class 2606 OID 16457)
+-- Name: favorite_restaurants favorite_restaurants_restaurant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.favorite_restaurants
+    ADD CONSTRAINT favorite_restaurants_restaurant_id_fkey FOREIGN KEY (restaurant_id) REFERENCES public.restaurants(id);
+
+
+--
+-- TOC entry 3311 (class 2606 OID 16462)
+-- Name: favorite_restaurants favorite_restaurants_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.favorite_restaurants
+    ADD CONSTRAINT favorite_restaurants_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- TOC entry 3321 (class 2606 OID 24630)
+-- Name: visited_places fk_restaurant; Type: FK CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.visited_places
+    ADD CONSTRAINT fk_restaurant FOREIGN KEY (restaurant_id) REFERENCES public.restaurants(id);
+
+
+--
+-- TOC entry 3322 (class 2606 OID 24625)
+-- Name: visited_places fk_user; Type: FK CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.visited_places
+    ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES public.profile(user_id);
+
+
+--
+-- TOC entry 3323 (class 2606 OID 24648)
+-- Name: friendships friendships_member1_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.friendships
+    ADD CONSTRAINT friendships_member1_id_fkey FOREIGN KEY (member1_id) REFERENCES public.users(id);
+
+
+--
+-- TOC entry 3324 (class 2606 OID 24653)
+-- Name: friendships friendships_member2_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.friendships
+    ADD CONSTRAINT friendships_member2_id_fkey FOREIGN KEY (member2_id) REFERENCES public.users(id);
+
+
+--
+-- TOC entry 3312 (class 2606 OID 16467)
+-- Name: locations locations_city_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.locations
+    ADD CONSTRAINT locations_city_id_fkey FOREIGN KEY (city_id) REFERENCES public.cities(id);
+
+
+--
+-- TOC entry 3318 (class 2606 OID 32778)
+-- Name: users profile; Type: FK CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT profile FOREIGN KEY (id) REFERENCES public.profile(user_id) NOT VALID;
+
+
+--
+-- TOC entry 3313 (class 2606 OID 16472)
+-- Name: restaurant_cuisines restaurant_cuisines_cuisine_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.restaurant_cuisines
+    ADD CONSTRAINT restaurant_cuisines_cuisine_type_id_fkey FOREIGN KEY (cuisine_type_id) REFERENCES public.cuisine_types(id);
+
+
+--
+-- TOC entry 3314 (class 2606 OID 16477)
+-- Name: restaurant_cuisines restaurant_cuisines_restaurant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.restaurant_cuisines
+    ADD CONSTRAINT restaurant_cuisines_restaurant_id_fkey FOREIGN KEY (restaurant_id) REFERENCES public.restaurants(id);
+
+
+--
+-- TOC entry 3315 (class 2606 OID 16482)
+-- Name: restaurants restaurants_location_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.restaurants
+    ADD CONSTRAINT restaurants_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.locations(id);
+
+
+--
+-- TOC entry 3316 (class 2606 OID 16487)
+-- Name: reviews reviews_restaurant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_restaurant_id_fkey FOREIGN KEY (restaurant_id) REFERENCES public.restaurants(id);
+
+
+--
+-- TOC entry 3317 (class 2606 OID 16492)
+-- Name: reviews reviews_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: docker
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+-- Completed on 2024-01-07 18:21:46 UTC
+
+--
+-- PostgreSQL database dump complete
+--
+
